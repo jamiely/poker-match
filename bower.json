@@ -1,0 +1,20 @@
+{
+  "name": "poker-match",
+  "version": "0.0.1",
+  "authors": [
+    "Jamie Ly <jamie.ly@gmail.com>"
+  ],
+  "description": "A matching game involving poker cards.",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "phaser": "~2.2.1"
+  }
+}
