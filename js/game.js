@@ -354,7 +354,7 @@
   // Use to make a card flip. Returns a tween that you
   // can use for chaining.
   function flipCard(card) {
-    var duration = 1000,
+    var duration = 300 + Math.random() * 300,
       easing = Phaser.Easing.Linear.None;
     var origX = card.x;
     var origWidth = card.width;
@@ -393,9 +393,9 @@
 
       // withdraw card
       backTween.onComplete.addOnce(function() {
-        card.kill();
+        killCard(card);
         game.add.tween(back).to({y: 1000}, 
-                                1000, 
+                                500 * Math.random() + 500, 
                                 Phaser.Easing.Linear.None).delay(500).start();
       });
 
@@ -405,6 +405,12 @@
     });
 
     return t;
+  }
+
+  function killCard(card) {
+    // clear the board cache
+    BOARD[card.jalBoardCoordinates.toString()] = null;;
+    card.kill();
   }
 
   // Use to remove a match
