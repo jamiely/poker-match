@@ -103,22 +103,40 @@
       what: 'matchCards',
       original: original
     });
+    var MATCH = {
+      WILD: 'wild',
+      FLUSH: 'flush',
+      KIND: 'kind'
+    };
+    // returns false if the cards dont match in anyway. Otherwise,
+    // returns an array containing the ways in which they match.
     function cardsMatch(a, b, dir) {
       if(!a || !b) return false;
 
       var av = a.jalCardValue,
           bv = b.jalCardValue;
-      if( av.isWild || bv.isWild ) return true;
-      if( av.suit === bv.suit ) return true;
-      if( av.value === bv.value ) return true;
 
-      return false;
+      if( av.isWild || bv.isWild ) return [MATCH.WILD];
+
+      var matchTypes = [];
+      if( av.suit === bv.suit ) {
+        matchTypes.push(MATCH.FLUSH);
+      }
+
+      if( av.value === bv.value ) {
+        matchTypes.push(MATCH.KIND);
+      }
+
+      return matchTypes.length === 0 ? false : matchTypes;
     }
-    function matchInDir(prev, dir) {
+    // it's easier if we build up the matches along
+    // with the type as we discover.
+    // @param matches contains the matches so far
+    function matchInDir(prev, dir, matches) {
       depth ++;
-      if(depth > 100) return [];
+      if(depth > 100) return matches;
 
-      if(prev === null) return [];
+      if(prev === null) return matches;
 
       var c = cardInDirection(prev, dir);
       console.log({
@@ -127,17 +145,95 @@
         dir: dir,
         next: c
       });
-      if(c === null) return [];
+      if(c === null) return matches;
 
-      if(cardsMatch(prev, c, dir)) {
-        return [c].concat(matchInDir(c, dir));
+      // if the cards match, we need to know how they match
+      // and add it to the corresponding match group
+      var matchTypes = cardsMatch(prev, c, dir);
+      if(matchTypes) {
+        // we want to augment the passed matches
+        // with the card, depending on how they match
+        _.each(matches, function(match) {
+          _.each(matchTypes, function(mt) {
+            if(mt !== match.matchType && 
+               mt.matchType !== MATCH.WILD) {
+              return;
+            }
+
+            match.match.push(c);
+          });
+        });
+        return matchInDir(c, dir, matches);
       }
-      return [];
+      return matches;
     }
 
-    return [original].
-      concat(matchInDir(original, DIRECTION.LEFT)).
-      concat(matchInDir(original, DIRECTION.RIGHT));
+    function getBaseMatches() {
+      return _.map([MATCH.FLUSH, MATCH.KIND], function(mt) {
+        return {
+          matchType: mt,
+          match: [original]
+        }
+      });
+    };
+
+    function matchAcceptable(m) {
+      var len = m.match.length;
+
+      if(m.matchType === MATCH.KIND && len > 2) return true;
+      if(m.matchType === MATCH.FLUSH && len > 3) return true;
+
+      console.log({
+        what: 'matchAcceptable unacceptable',
+        m: m
+      });
+
+      return false;
+    }
+
+    function mergeMatch(orig) {
+      return function (a, b) {
+        if(a.matchType !== b.matchType) throw 'cannot merge matches with different match types';
+
+        return {
+          matchType: a.matchType,
+          match: _.without(a.match.concat(b.match), orig).concat(orig)
+        };
+      };
+    }
+
+    function mergeMatches(original, all) {
+      var parts = _.partition(all, function(m) {
+        return m.matchType === MATCH.KIND
+      }),
+        kinds = parts[0],
+        flushes = parts[1];
+
+      console.log({
+        what: 'mergeMatches',
+        all: all,
+        kinds: kinds,
+        flushes: flushes
+      });
+
+      var merge = mergeMatch(original);
+
+      return [_.reduce(kinds, merge)].concat(
+        [_.reduce(flushes, merge)]);
+    }
+
+    var merged = mergeMatches(
+        original,
+        matchInDir(original, DIRECTION.LEFT, getBaseMatches()).concat(
+        matchInDir(original, DIRECTION.RIGHT, getBaseMatches()))
+      );
+
+    console.log({
+      what: 'merged',
+      merged: merged
+    });
+
+    return _.filter(merged, matchAcceptable);
   }
 
   // Determine if two cards are adjacent to each other.
@@ -173,8 +269,13 @@
     ];
     var tweenCountLeft = tweens.length;
     function tryMatches() {
-      var matches = _.map([a, b], function(card) {
-        return matchCards(card);
+      var matches = _.filter(_.map([a, b], function(card) {
+        return {
+          card: card,
+          matches: matchCards(card)
+        };
+      }), function(m) {
+        return m.matches && m.matches.length > 0;
       });
       console.log({
         what: 'matches',
