@@ -17,6 +17,7 @@
   var CARD_SIZE_SPACED = Phaser.Point.add(CARD_SIZE_ADJ, CARD_SPACING);
 
   var cards;
+  var cardBacks;
   var selectedCard;
   var swapInProgress = false;
 
@@ -33,10 +34,22 @@
       'cards', 
       'assets/sprites/playingCards.png', 
       'assets/sprites/playingCards.xml');
+    game.load.atlasXML(
+      'cardBacks',
+      'assets/sprites/playingCardBacks.png', 
+      'assets/sprites/playingCardBacks.xml');
   }
 
   function create() {
     spawnBoard();
+  }
+
+  function createCardbackForCard(card) {
+    var back = cardBacks.create(card.x, card.y, 'cardBacks');
+    back.frameName = "cardBack_green2.png";
+    back.scale = _.clone(card.scale);
+    back.scale.x = 0;
+    return back;
   }
 
   // fill the screen with as many cards as possible
@@ -46,6 +59,7 @@
       //Phaser.Math.floor(game.world.height / CARD_SIZE_SPACED.y));
 
     cards = game.add.group();
+    cardBacks = game.add.group();
 
     for (var i = 0; i < BOARD_SIZE.x; i++)
     {
@@ -281,6 +295,10 @@
         what: 'matches',
         matches: matches
       });
+
+      _.each(matches, function(m) {
+        _.each(m.matches, disappearMatch);
+      });
     }
     function swapCoordinates() {
       // swap the coordinates of the cards
@@ -331,6 +349,69 @@
       pointer: pointer
     });
     selectedCard = card;
+  }
+
+  // Use to make a card flip. Returns a tween that you
+  // can use for chaining.
+  function flipCard(card) {
+    var duration = 1000,
+      easing = Phaser.Easing.Linear.None;
+    var origX = card.x;
+    var origWidth = card.width;
+
+    //card.anchor.setTo(.5, card.anchor.y);
+    var posChange = game.add.tween(card).to({
+      x: origX + origWidth
+    }, duration, easing);
+
+    var originalScale = card.scale.x;
+    var halfScale = originalScale / 2.0;
+    
+    var firstHalf = game.add.tween(card.scale).to({ 
+      x: - halfScale, 
+      y: card.scale.y 
+    }, 
+      duration / 2, 
+      easing);
+
+    var t = firstHalf.to({
+      x: - originalScale,
+      y: card.scale.y},
+      duration / 2,
+      easing);
+
+    t.onStart.add(function() {
+      var back = createCardbackForCard(card);
+      back.x = origX + origWidth / 2.0;
+      game.add.tween(back.scale).to({
+        x: originalScale,
+        y: back.scale.y
+      }, duration/2, easing).start();
+      var backTween = game.add.tween(back).to({
+        x: origX
+      }, duration/2, easing);
+
+      // withdraw card
+      backTween.onComplete.addOnce(function() {
+        card.kill();
+        game.add.tween(back).to({y: 1000}, 
+                                1000, 
+                                Phaser.Easing.Linear.None).delay(500).start();
+      });
+
+      backTween.start();
+
+      posChange.start();
+    });
+
+    return t;
+  }
+
+  // Use to remove a match
+  function disappearMatch(match) {
+    _.each(match.match, function(card) {
+      flipCard(card).start();
+    });
   }
 
   function releaseCard(card, pointer) {
