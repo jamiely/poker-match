@@ -2,7 +2,7 @@
 
   var CARD_SIZE = new Phaser.Point(140, 190);
   var CARD_SPACING = new Phaser.Point(2, 2);
-  var BOARD_SIZE = new Phaser.Point(10, 6);
+  var BOARD_SIZE = new Phaser.Point(10, 5);
   var GAME_SIZE = new Phaser.Point(800, 600);
   // this is the amount of space for each cell
   var BOARD_SPACING = Phaser.Point.divide(GAME_SIZE, BOARD_SIZE);
@@ -214,8 +214,8 @@
     function matchAcceptable(m) {
       var len = m.match.length;
 
-      if(m.matchType === MATCH.KIND && len > 1) return true;
-      if(m.matchType === MATCH.FLUSH && len > 2) return true;
+      if(m.matchType === MATCH.KIND && len > 2) return true;
+      if(m.matchType === MATCH.FLUSH && len > 3) return true;
 
       console.log({
         what: 'matchAcceptable unacceptable',
@@ -295,12 +295,12 @@
       return;
     }
 
-    var swapDuration = 250;
+    var swapDuration = 100;
     console.log({
       event: 'swapping cards',
       a: a, b: b });
     swapInProgress = true;
-    var easing = Phaser.Easing.Linear.None;
+    var easing = Phaser.Easing.Quadratic.Out;
     function addTween(c1, c2) {
       return game.add.tween(c1).
         to( { x: c2.x, y: c2.y }, swapDuration, easing);
