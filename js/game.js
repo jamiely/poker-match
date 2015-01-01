@@ -23,6 +23,8 @@
 
   var BOARD = null;
 
+  var cardsKilled = [];
+
   var game = new Phaser.Game(GAME_SIZE.x, GAME_SIZE.y, Phaser.CANVAS, 'game', { 
     preload: preload, 
     create: create,
@@ -52,6 +54,27 @@
     return back;
   }
 
+  function createCard(i, j) {
+    var card = cards.create(i * CARD_SIZE_SPACED.x,
+                        j * CARD_SIZE_SPACED.y,
+                        "cards");
+    randomizeCardColor(card);
+    card.jalCardValue = parseCardName(card._frame.name);
+    card.name = card.jalCardValue.baseName;
+    // we'll attach board coordinates directly to this sprite
+    // for now for lack of knowledge of a better way to do it
+    // using Phaser. It may be better to store this in a separate
+    // hash.
+    card.jalBoardCoordinates = new Phaser.Point(i, j);
+    card.scale.setTo(CARD_SCALE, CARD_SCALE);
+    card.inputEnabled = true;
+    card.events.onInputDown.add(selectCard, this);
+    card.events.onInputUp.add(releaseCard, this);
+    saveBoardCoords(card);
+
+    return card;
+  }
+
   // fill the screen with as many cards as possible
   function spawnBoard() {
     //BOARD_SIZE = new Phaser.Point(
@@ -61,33 +84,18 @@
     cards = game.add.group();
     cardBacks = game.add.group();
 
+    BOARD = {}; // this init needs to happen before cards are created.
     for (var i = 0; i < BOARD_SIZE.x; i++)
     {
       for (var j = 0; j < BOARD_SIZE.y; j++)
       {
-        var card = cards.create(i * CARD_SIZE_SPACED.x, 
-                                j * CARD_SIZE_SPACED.y, 
-                                "cards");
-        card.name = 'card' + i.toString() + 'x' + j.toString();
-        // we'll attach board coordinates directly to this sprite
-        // for now for lack of knowledge of a better way to do it
-        // using Phaser. It may be better to store this in a separate
-        // hash.
-        card.jalBoardCoordinates = new Phaser.Point(i, j);
-        card.scale.setTo(CARD_SCALE, CARD_SCALE);
-        card.inputEnabled = true;
-        card.events.onInputDown.add(selectCard, this);
-        card.events.onInputUp.add(releaseCard, this);
-        randomizeCardColor(card);
-        card.jalCardValue = parseCardName(card._frame.name);
-        setCardPos(card, i, j); // each card has a position on the board
+        var card = createCard(i, j);
       }
     }
 
-    BOARD = {};
-    cards.forEachAlive(saveBoardCoords);
   }
 
+  // updates the board coordinates in the global registry.
   function saveBoardCoords(c) {
     var i = c.jalBoardCoordinates.toString();
     BOARD[i] = c;
@@ -100,14 +108,22 @@
     LEFT: new Phaser.Point(-1, 0)
   };
 
+  function cardAt(pt) {
+    return BOARD[pt.toString()];
+  }
+
+  function ptInDir(pt, dir) {
+    return Phaser.Point.add(pt, dir);
+  }
+
   // dir is a point
   function cardInDirection(c, dir) {
-    var coord = Phaser.Point.add(c.jalBoardCoordinates, dir);
+    var coord = ptInDir(c.jalBoardCoordinates, dir);
     console.log({
       what: 'cardInDirection coord',
       coord: coord
     });
-    return BOARD[coord.toString()];
+    return cardAt(coord);
   }
 
   // Use to return a group of cards that match
@@ -194,8 +210,8 @@
     function matchAcceptable(m) {
       var len = m.match.length;
 
-      if(m.matchType === MATCH.KIND && len > 2) return true;
-      if(m.matchType === MATCH.FLUSH && len > 3) return true;
+      if(m.matchType === MATCH.KIND && len > 1) return true;
+      if(m.matchType === MATCH.FLUSH && len > 2) return true;
 
       console.log({
         what: 'matchAcceptable unacceptable',
@@ -407,16 +423,110 @@
     return t;
   }
 
+  function ptInBounds(pt) {
+    return pt.x >= 0 && pt.x < BOARD_SIZE.x &&
+      pt.y >= 0 && pt.y < BOARD_SIZE.y;
+  }
+
+  // drop the column from the passed starting point
+  function dropColumnFromPt(pt, complete) {
+    complete = complete || function(){};
+
+    console.log({
+      what: 'dropColumnFromPt',
+      pt: pt
+    });
+
+    var ptAbove = ptInDir(pt, DIRECTION.UP);
+    var above = cardAt(ptAbove);
+    var continueDropping = ptInBounds(ptAbove);
+    if(! above) {
+      if(continueDropping) {
+        console.log('recursively drop column');
+        dropColumnFromPt(ptAbove, function() {
+          dropColumnFromPt(pt); // try again
+        });
+        return;
+      } else {
+        console.log('create a new card to drop');
+        console.log('return for now');
+        above = createCard(ptAbove.x, ptAbove.y);
+      }
+    }
+
+    // set some properties so we know the card is
+    // dropping
+    above.dropping = {
+      newBoardCoordinates: pt
+    };
+
+    // perform the actual drop now. we want to tween
+    // the card's position to the one below it.
+    //
+    var newLocation = ptForBoardAt(pt);
+    var fallDelay = 250;
+    var fallDuration = 500 + Math.random()*500;
+    // TODO: change easing to bounce.
+    var easing = Phaser.Easing.Bounce.Out;
+    var tween = game.add.tween(above).to({
+      x: newLocation.x,
+      y: newLocation.y},
+      fallDuration,
+      easing).delay(fallDelay);
+    tween.onComplete.add(function() {
+      above.jalBoardCoordinates = pt;
+      saveBoardCoords(above);
+      // clear the metadata on this
+      delete above.dropping;
+      complete();
+    });
+    tween.start();
+
+    if(continueDropping) {
+      console.log('continue dropping');
+      dropColumnFromPt(ptAbove);
+    }
+  }
+
+  // provides the x-y coordinate for passed board position.
+  function ptForBoardAt(pos) {
+    return new Phaser.Point(pos.x * CARD_SIZE_SPACED.x,
+                            pos.y * CARD_SIZE_SPACED.y);
+  }
+
+  function dropCards() {
+    console.log('dropping cards');
+    _.each(cardsKilled, function(k) {
+      dropColumnFromPt(k.boardCoordinates);
+    });
+  }
+
   function killCard(card) {
     // clear the board cache
-    BOARD[card.jalBoardCoordinates.toString()] = null;;
+    BOARD[card.jalBoardCoordinates.toString()] = null;
+    cardsKilled.push({
+      boardCoordinates: card.jalBoardCoordinates,
+      cardValue: card.jalCardValue
+    });
     card.kill();
   }
 
   // Use to remove a match
   function disappearMatch(match) {
+    var count = match.match.length;
+    function onMatchDisappearComplete() {
+      count --;
+      if(count > 0) {
+        return;
+      }
+
+      // drop all the cards
+      dropCards();
+    }
     _.each(match.match, function(card) {
-      flipCard(card).start();
+      var t = flipCard(card)
+      t.onComplete.add(onMatchDisappearComplete);
+      t.start();
     });
   }
 
@@ -471,19 +581,6 @@
   function randomizeCardColor(card) {
     card.frame = 
       game.rnd.integerInRange(0, 52);
-  }
-
-  // set the position on the board for a card
-  function setCardPos(card, posX, posY) {
-    card.posX = posX;
-    card.posY = posY;
-    card.id = calcCardId(posX, posY);
-  }
-
-  // the gem id is used by getGem() to find specific gems in the group
-  // each position on the board has a unique id
-  function calcCardId(posX, posY) {
-    return posX + posY * BOARD_SIZE.x;
   }
 
   function render() {
