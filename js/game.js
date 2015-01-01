@@ -495,8 +495,8 @@
     // the card's position to the one below it.
     //
     var newLocation = ptForBoardAt(pt);
-    var fallDelay = 250;
-    var fallDuration = 250 + Math.random()*250;
+    var fallDelay = 0;
+    var fallDuration = 100 + Math.random()*250;
     // TODO: change easing to bounce.
     var easing = Phaser.Easing.Bounce.Out;
     var tween = game.add.tween(above).to({
