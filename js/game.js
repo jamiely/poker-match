@@ -15,6 +15,17 @@
   console.log(CARD_SCALE);
   var CARD_SIZE_ADJ = CARD_SIZE.multiply(CARD_SCALE, CARD_SCALE);
   var CARD_SIZE_SPACED = Phaser.Point.add(CARD_SIZE_ADJ, CARD_SPACING);
+  var DIRECTION = {
+    UP: new Phaser.Point(0, -1), // up
+    DOWN: new Phaser.Point(0, 1), // down
+    RIGHT: new Phaser.Point(1, 0), // right
+    LEFT: new Phaser.Point(-1, 0)
+  };
+  var AXIS = {
+    HORIZONTAL: [DIRECTION.LEFT, DIRECTION.RIGHT],
+    VERTICAL: [DIRECTION.DOWN, DIRECTION.UP]
+  };
+  var AXES = [AXIS.HORIZONTAL, AXIS.VERTICAL];
 
   var cards;
   var cardBacks;
@@ -100,13 +111,6 @@
   function saveBoardCoords(c) {
     BOARD[c.jalBoardCoordinates.toString()] = c;
   }
-
-  var DIRECTION = {
-    UP: new Phaser.Point(0, -1), // up
-    DOWN: new Phaser.Point(0, 1), // down
-    RIGHT: new Phaser.Point(1, 0), // right
-    LEFT: new Phaser.Point(-1, 0)
-  };
 
   function cardAt(pt) {
     return BOARD[pt.toString()];
@@ -232,6 +236,8 @@
       };
     }
 
+    // merges the passed matches by match type, making sure not to
+    // double-count the original.
     function mergeMatches(original, all) {
       var parts = _.partition(all, function(m) {
         return m.matchType === MATCH.KIND
@@ -252,11 +258,17 @@
         [_.reduce(flushes, merge)]);
     }
 
-    var merged = mergeMatches(
-        original,
-        matchInDir(original, DIRECTION.LEFT, getBaseMatches()).concat(
-        matchInDir(original, DIRECTION.RIGHT, getBaseMatches()))
-      );
+    // finds all the matches in the passed directions, and
+    // merges them together by match type.
+    function mergedMatchesInDirections(dirs) {
+      return _.reduce(dirs, function(mem, dir) {
+        return mem.concat(matchInDir(original, dir, getBaseMatches()));
+      }, []);
+    }
+
+    var merged = _.reduce(AXES, function(mem, axis) {
+      return mem.concat(mergedMatchesInDirections(axis));
+    }, []);
 
     console.log({
       what: 'merged',
@@ -429,7 +441,7 @@
   }
 
   // drop the column from the passed starting point
-  function dropColumnFromPt(pt, complete) {
+  function dropColumnFromPt(pt, complete, newCardCreated) {
     complete = complete || function(){};
 
     console.log({
@@ -437,19 +449,38 @@
       pt: pt
     });
 
+
     var ptAbove = ptInDir(pt, DIRECTION.UP);
     var above = cardAt(ptAbove);
     var continueDropping = ptInBounds(ptAbove);
     if(! above) {
       if(continueDropping) {
+        // dropping doesn't complete yet, so we have
+        // to wait.
         console.log('recursively drop column');
-        while(!above) {
-          dropColumnFromPt(ptAbove);
-          above = cardAt(ptAbove);
-        }
+        dropColumnFromPt(ptAbove, function() {
+          // try again once this is complete.
+          dropColumnFromPt(pt, complete, newCardCreated);
+        }, newCardCreated);
+        return;
       } else {
-        console.log('create a new card to drop');
+        if(cardAt(ptAbove)) {
+          throw {
+            pt: pt,
+            ptAbove: ptAbove,
+            message: 'there shouldnt be a card registered at a point out of bounds'
+          };
+        }
+        if(newCardCreated) {
+          throw {
+            pt: pt,
+            ptAbove: ptAbove,
+            message: 'We shouldnt get here because a new card has already been created'
+          };
+        }
         above = createCard(ptAbove.x, ptAbove.y);
+        console.log('create a new card to drop');
+        newCardCreated = true;
       }
     }
 
@@ -465,7 +496,7 @@
     //
     var newLocation = ptForBoardAt(pt);
     var fallDelay = 250;
-    var fallDuration = 500 + Math.random()*500;
+    var fallDuration = 250 + Math.random()*250;
     // TODO: change easing to bounce.
     var easing = Phaser.Easing.Bounce.Out;
     var tween = game.add.tween(above).to({
@@ -480,13 +511,17 @@
       // clear the metadata on this
       delete above.dropping;
       //complete();
+      // move this outside the on completion once
+      // we resolve some more of the problems.
+      if(continueDropping) {
+        console.log('continue dropping');
+        dropColumnFromPt(ptAbove, complete, newCardCreated);
+      } else {
+        complete();
+      }
     });
     tween.start();
 
-    if(continueDropping) {
-      console.log('continue dropping');
-      dropColumnFromPt(ptAbove);
-    }
   }
 
   // provides the x-y coordinate for passed board position.
@@ -497,8 +532,18 @@
 
   function dropCards() {
     console.log('dropping cards');
+    var cols = {};
+
+    // find the lowest point in each col
     _.each(cardsKilled, function(k) {
-      dropColumnFromPt(k.boardCoordinates);
+      var c = k.boardCoordinates.x;
+      if(!cols[c] || 
+         (cols[c] && cols[c].y < k.boardCoordinates.y)) {
+        cols[c] = k.boardCoordinates;
+      }
+    });
+    _.each(_.values(cols), function(coords) {
+      dropColumnFromPt(coords);
     });
     cardsKilled = [];
   }
