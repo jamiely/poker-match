@@ -54,6 +54,7 @@
     return back;
   }
 
+  // does not register card position in global board container.
   function createCard(i, j) {
     var card = cards.create(i * CARD_SIZE_SPACED.x,
                         j * CARD_SIZE_SPACED.y,
@@ -70,7 +71,6 @@
     card.inputEnabled = true;
     card.events.onInputDown.add(selectCard, this);
     card.events.onInputUp.add(releaseCard, this);
-    saveBoardCoords(card);
 
     return card;
   }
@@ -90,6 +90,7 @@
       for (var j = 0; j < BOARD_SIZE.y; j++)
       {
         var card = createCard(i, j);
+        saveBoardCoords(card);
       }
     }
 
@@ -97,8 +98,7 @@
 
   // updates the board coordinates in the global registry.
   function saveBoardCoords(c) {
-    var i = c.jalBoardCoordinates.toString();
-    BOARD[i] = c;
+    BOARD[c.jalBoardCoordinates.toString()] = c;
   }
 
   var DIRECTION = {
@@ -443,13 +443,12 @@
     if(! above) {
       if(continueDropping) {
         console.log('recursively drop column');
-        dropColumnFromPt(ptAbove, function() {
-          dropColumnFromPt(pt); // try again
-        });
-        return;
+        while(!above) {
+          dropColumnFromPt(ptAbove);
+          above = cardAt(ptAbove);
+        }
       } else {
         console.log('create a new card to drop');
-        console.log('return for now');
         above = createCard(ptAbove.x, ptAbove.y);
       }
     }
@@ -459,6 +458,7 @@
     above.dropping = {
       newBoardCoordinates: pt
     };
+    above.inputEnabled = false;
 
     // perform the actual drop now. we want to tween
     // the card's position to the one below it.
@@ -475,10 +475,11 @@
       easing).delay(fallDelay);
     tween.onComplete.add(function() {
       above.jalBoardCoordinates = pt;
+      above.inputEnabled = true;
       saveBoardCoords(above);
       // clear the metadata on this
       delete above.dropping;
-      complete();
+      //complete();
     });
     tween.start();
 
@@ -499,6 +500,7 @@
     _.each(cardsKilled, function(k) {
       dropColumnFromPt(k.boardCoordinates);
     });
+    cardsKilled = [];
   }
 
   function killCard(card) {
