@@ -3,6 +3,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-open');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-wiredep');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -14,13 +15,24 @@ module.exports = function (grunt) {
         }
       }
     },
+    wiredep: {
+      default: {
+        src: 'index.html'
+      }
+    },
     watch: {
-      files: 'src/**/*.js',
+      files: ['js/*.js', 'Gruntfile.js'],
       tasks: ['concat']
     },
     open: {
       dev: {
         path: 'http://localhost:8080/index.html'
+      }
+    },
+    concat: {
+      dist: {
+        src: 'js/*.js',
+        dest: 'dist/game.js'
       }
     }
   });
