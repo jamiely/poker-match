@@ -145,6 +145,7 @@ PM.CardFactory = PM.CardFactory || function(gameBoard, cardSelector) {
   var cards;
   var cardBacks;
   var cardNameParser = new PM.CardNameParser();
+  var allowJokers = false;
 
   var killCard = this.killCard = function(card) {
     // clear the board cache
@@ -180,6 +181,10 @@ PM.CardFactory = PM.CardFactory || function(gameBoard, cardSelector) {
   function randomizeCardColor(card) {
     card.frame = 
       game.rnd.integerInRange(0, 52);
+    if(!allowJokers &&
+       card.frameName == 'cardJoker.png') {
+      randomizeCardColor(card);
+    }
   }
 
   // does not register card position in global board container.
