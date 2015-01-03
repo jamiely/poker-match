@@ -101,6 +101,47 @@ PM.Board = PM.Board || function(boardSize) {
 };
 
 
+PM.BoardParser = PM.BoardParser || function() {
+  // parses board in pipe delimited format.
+  // "A♠|9♥|A♠|9♥|A♠"
+  // "9♥|A♠|9♥|A♠|9♥"
+  // "A♠|9♥|A♠|9♥|A♠"
+  // "9♥|A♠|9♥|A♠|9♥"
+  // "A♠|9♥|A♠|9♥|A♠"
+  //♠
+  //♥
+  //♦
+  //♣
+  var cardParser = new PM.UnicodeParser();
+  var parse = this.parse = function(str) {
+    var lines = str.split('\n');
+    var rows = _.map(lines, function(line) {
+      var cols = line.split('|');
+      return _.map(cols, function(cell) {
+        return cardParser.parse(cell);
+      });
+    });
+    if(rows.length === 0) return null;
+
+    var cols = rows[0].length;
+    var cards = [];
+    for(var r = 0; r < rows.length; r++) {
+      for(var c = 0; c < cols; c++) {
+        cards.push({
+          jalBoardCoordinates: new Phaser.Point(c, r),
+          jalCardValue: rows[r][c]
+        });
+      }
+    }
+
+    var board = new PM.Board();
+    board.saveCards(cards);
+
+    return board;
+  };
+};
+
+
 PM.CardFactory = PM.CardFactory || function(gameBoard, cardSelector) {
   var game = gameBoard.game;
   var board = gameBoard.board;
@@ -184,7 +225,7 @@ PM.CardNameParser = PM.CardNameParser || function() {
 
     var suits = _.map('Hearts Diamonds Clubs Spades'.split(' '), function(s) {
       return {
-        name: s,
+        name: s.toLowerCase(),
         suitRegExp: new RegExp('^' + s)
       };
     });
@@ -768,5 +809,65 @@ PM.Renderer = PM.Renderer || function(game, getSelectedCard) {
       game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');
     }
   }, this);
+};
+
+
+PM.UnicodeParser = PM.UnicodeParser || function() {
+  var USPADES = '♠',
+    UHEARTS = '♥',
+    UDIAMOND = '♦',
+    UCLUB = '♣';
+
+  var unicodeToSuits = {};
+  unicodeToSuits[USPADES] = 'spades',
+  unicodeToSuits[UHEARTS] = 'hearts',
+  unicodeToSuits[UDIAMOND] = 'diamonds',
+  unicodeToSuits[UCLUB] = 'clubs'
+
+  var suitRegexes = _.map(_.keys(unicodeToSuits), function(k) {
+    return {
+      predicate: function(str) {
+        return str.replace(k, '').length !== str.length;
+      },
+      name: unicodeToSuits[k],
+      unicode: k,
+      strip: function(str) {
+        return str.replace(k, '');
+      }
+    };
+  });
+
+  var validValues = '2 3 4 5 6 7 8 9 10 J Q K A'.split(' ');
+
+  // parses something like 4♠ or J
+  this.parse = function(str) {
+    var suitRE = _.find(suitRegexes, function(re) {
+      return re.predicate(str);
+    });
+
+    if(! suitRE) {
+      return {
+        unknown: true,
+        original: str
+      };
+    }
+
+    var value = suitRE.strip(str);
+    if(validValues.indexOf(value) === -1) {
+      return {
+        suit: suitRE.name,
+        unknown: true,
+        original: str,
+        unrecognizedValue: value
+      };
+    }
+
+    return {
+      suit: suitRE.name,
+      suitRE: suitRE,
+      value: value,
+      original: str
+    };
+  };
 };
 

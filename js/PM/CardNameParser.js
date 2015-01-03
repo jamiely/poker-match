@@ -13,7 +13,7 @@ PM.CardNameParser = PM.CardNameParser || function() {
 
     var suits = _.map('Hearts Diamonds Clubs Spades'.split(' '), function(s) {
       return {
-        name: s,
+        name: s.toLowerCase(),
         suitRegExp: new RegExp('^' + s)
       };
     });
