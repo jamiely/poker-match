@@ -20,6 +20,13 @@ PM.App = PM.App || function(config) {
     create: create,
     render: renderer.render
   };
+  var history = new PM.History();
+
+  cardSwapper.signalCardGroupDropped.add(function(cards) {
+    console.log('CARDS DROPPED');
+    console.log(cards);
+    history.remember(cards);
+  });
   game.state.add('main', gameState);
 
   // accessible from outside

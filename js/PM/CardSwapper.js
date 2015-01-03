@@ -7,6 +7,8 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
   var killCard = args.cardFactory.killCard;
   var createCard = args.cardFactory.createCard;
 
+  var signalCardGroupDropped = this.signalCardGroupDropped = new Phaser.Signal();
+
   var swapInProgress = false;
   var cardsKilled = [];
   //
@@ -126,8 +128,8 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
       backTween.onComplete.addOnce(function() {
         killCard(card);
         cardsKilled.push({
-          boardCoordinates: card.jalBoardCoordinates,
-          cardValue: card.jalCardValue
+          jalBoardCoordinates: card.jalBoardCoordinates,
+          jalCardValue: card.jalCardValue
         });
         game.add.tween(back).to({y: 1000}, 
                                 500 * Math.random() + 500, 
@@ -166,16 +168,26 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
     console.log('dropping cards');
     var cols = {};
 
+    var cardsKilledCopy = _.clone(cardsKilled);
+
     // find the lowest point in each col
     _.each(cardsKilled, function(k) {
-      var c = k.boardCoordinates.x;
+      var c = k.jalBoardCoordinates.x;
       if(!cols[c] || 
-         (cols[c] && cols[c].y < k.boardCoordinates.y)) {
-        cols[c] = k.boardCoordinates;
+         (cols[c] && cols[c].y < k.jalBoardCoordinates.y)) {
+        cols[c] = k.jalBoardCoordinates;
       }
     });
-    _.each(_.values(cols), function(coords) {
-      dropColumnFromPt(coords);
+    var columnValues = _.values(cols);
+    var dropCounter = 0;
+    function onDropComplete() {
+      dropCounter ++;
+      if(dropCounter < columnValues.length) return;
+
+      signalCardGroupDropped.dispatch(cardsKilledCopy);
+    }
+    _.each(columnValues, function(coords) {
+      dropColumnFromPt(coords, onDropComplete);
     });
     cardsKilled = [];
   }

@@ -24,6 +24,13 @@ PM.App = PM.App || function(config) {
     create: create,
     render: renderer.render
   };
+  var history = new PM.History();
+
+  cardSwapper.signalCardGroupDropped.add(function(cards) {
+    console.log('CARDS DROPPED');
+    console.log(cards);
+    history.remember(cards);
+  });
   game.state.add('main', gameState);
 
   // accessible from outside
@@ -304,6 +311,8 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
   var killCard = args.cardFactory.killCard;
   var createCard = args.cardFactory.createCard;
 
+  var signalCardGroupDropped = this.signalCardGroupDropped = new Phaser.Signal();
+
   var swapInProgress = false;
   var cardsKilled = [];
   //
@@ -423,8 +432,8 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
       backTween.onComplete.addOnce(function() {
         killCard(card);
         cardsKilled.push({
-          boardCoordinates: card.jalBoardCoordinates,
-          cardValue: card.jalCardValue
+          jalBoardCoordinates: card.jalBoardCoordinates,
+          jalCardValue: card.jalCardValue
         });
         game.add.tween(back).to({y: 1000}, 
                                 500 * Math.random() + 500, 
@@ -463,16 +472,26 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
     console.log('dropping cards');
     var cols = {};
 
+    var cardsKilledCopy = _.clone(cardsKilled);
+
     // find the lowest point in each col
     _.each(cardsKilled, function(k) {
-      var c = k.boardCoordinates.x;
+      var c = k.jalBoardCoordinates.x;
       if(!cols[c] || 
-         (cols[c] && cols[c].y < k.boardCoordinates.y)) {
-        cols[c] = k.boardCoordinates;
+         (cols[c] && cols[c].y < k.jalBoardCoordinates.y)) {
+        cols[c] = k.jalBoardCoordinates;
       }
     });
-    _.each(_.values(cols), function(coords) {
-      dropColumnFromPt(coords);
+    var columnValues = _.values(cols);
+    var dropCounter = 0;
+    function onDropComplete() {
+      dropCounter ++;
+      if(dropCounter < columnValues.length) return;
+
+      signalCardGroupDropped.dispatch(cardsKilledCopy);
+    }
+    _.each(columnValues, function(coords) {
+      dropColumnFromPt(coords, onDropComplete);
     });
     cardsKilled = [];
   }
@@ -623,6 +642,49 @@ PM.GameBoard = PM.GameBoard || function(config) {
                               config.gameSize.y, 
                               Phaser.CANVAS, 
                               config.element);
+};
+
+
+// keeps track of play history
+PM.History = PM.History || function() {
+  var memory = [];
+  var unicodeSuits = {
+    hearts: '♥',
+    spades: '♠',
+    clubs: '♣',
+    diamonds: '♦'
+  };
+
+  function displayCard(card) {
+    return card.jalCardValue.value + unicodeSuits[card.jalCardValue.suit];
+  }
+
+  function santizeCard(card) {
+    return {
+      jalCardValue: card.jalCardValue,
+      jalBoardCoordinates: card.jalBoardCoordinates,
+      display: displayCard(card)
+    };
+  }
+
+  function render() {
+    var htmlStr = '<ul class="history">' +
+      _.map(memory.reverse(), function(item) {
+        return '<li class="item">' + _.pluck(item, 'display').join(',') + '</li>';
+      }).join('') +
+      '</ul>';
+    document.getElementById('history').innerHTML = htmlStr;
+  }
+
+  var remember = this.remember = function(cards) {
+    cards = _.map(cards, santizeCard);
+    console.log({
+      what: 'added to memory',
+      cards: cards
+    });
+    memory.push(cards);
+    render();
+  };
 };
 
 
