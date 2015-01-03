@@ -28,10 +28,6 @@ PM.Board = PM.Board || function(boardSize) {
   // dir is a point
   var cardInDirection = this.cardInDirection = function(c, dir) {
     var coord = PM.Direction.pointInDir(c.jalBoardCoordinates, dir);
-    console.log({
-      what: 'cardInDirection coord',
-      coord: coord
-    });
     return cardAt(coord);
   };
   
