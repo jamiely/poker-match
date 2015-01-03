@@ -3,7 +3,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-open');
   grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-wiredep');
+  grunt.loadNpmTasks('grunt-bower-install');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -15,13 +15,27 @@ module.exports = function (grunt) {
         }
       }
     },
-    wiredep: {
+    bowerInstall: {
       default: {
         src: 'index.html'
+      },
+      test: { // https://github.com/stephenplusplus/grunt-wiredep/issues/35
+        src: 'karma.conf.js',
+        fileTypes: {
+          js: {
+            block: /(([\s\t]*)\/\/\s*bower:*(\S*))(\n|\r|.)*?(\/\/\s*endbower)/gi,
+            detect: {
+              js: /'.*\.js'/gi
+            },
+            replace: {
+              js: '\'{{filePath}}\','
+            }
+          }
+        }
       }
     },
     watch: {
-      files: ['js/*.js', 'Gruntfile.js'],
+      files: ['js/**/*.js', 'Gruntfile.js'],
       tasks: ['concat']
     },
     open: {
@@ -31,7 +45,7 @@ module.exports = function (grunt) {
     },
     concat: {
       dist: {
-        src: 'js/*.js',
+        src: 'js/**/*.js',
         dest: 'dist/game.js'
       }
     }
