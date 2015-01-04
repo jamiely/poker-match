@@ -15,6 +15,7 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
   }
 
   var signalCardGroupDropped = this.signalCardGroupDropped = new Phaser.Signal();
+  var signalMatchFound = this.signalMatchFound = new Phaser.Signal();
 
   var swapInProgress = false;
   var cardsKilled = [];
@@ -72,7 +73,10 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
         uniqueMatches: unique
       });
 
-      _.each(unique, disappearMatch);
+      _.each(unique, function(m) {
+        signalMatchFound.dispatch(m);
+        disappearMatch(m);
+      });
     }
     function swapCoordinates() {
       // swap the coordinates of the cards

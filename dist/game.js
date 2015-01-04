@@ -29,7 +29,10 @@ PM.App = PM.App || function(config) {
   cardSwapper.signalCardGroupDropped.add(function(cards) {
     console.log('CARDS DROPPED');
     console.log(cards);
-    history.remember(cards);
+    //history.remember(cards);
+  });
+  cardSwapper.signalMatchFound.add(function(match) {
+    history.remember(match);
   });
   game.state.add('main', gameState);
 
@@ -319,6 +322,7 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
   }
 
   var signalCardGroupDropped = this.signalCardGroupDropped = new Phaser.Signal();
+  var signalMatchFound = this.signalMatchFound = new Phaser.Signal();
 
   var swapInProgress = false;
   var cardsKilled = [];
@@ -376,7 +380,10 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
         uniqueMatches: unique
       });
 
-      _.each(unique, disappearMatch);
+      _.each(unique, function(m) {
+        signalMatchFound.dispatch(m);
+        disappearMatch(m);
+      });
     }
     function swapCoordinates() {
       // swap the coordinates of the cards
@@ -676,7 +683,7 @@ PM.History = PM.History || function() {
       '</span>';
   }
 
-  function santizeCard(card) {
+  function sanitizeCard(card) {
     return {
       jalCardValue: card.jalCardValue,
       jalBoardCoordinates: card.jalBoardCoordinates,
@@ -684,22 +691,25 @@ PM.History = PM.History || function() {
     };
   }
 
+  function sanitizeMatch(m) {
+    return {
+      matchType: m.matchType,
+      cards: _.map(m.match, sanitizeCard)
+    };
+  }
+
   function render() {
     var htmlStr = '<ul class="history">' +
       _.map(memory.reverse(), function(item) {
-        return '<li class="item">' + _.pluck(item, 'display').join(',') + '</li>';
+        return '<li class="item">' + _.pluck(item.cards, 'display').join(',') + 
+          ' (' + item.matchType + ')</li>';
       }).join('') +
       '</ul>';
     document.getElementById('history').innerHTML = htmlStr;
   }
 
-  var remember = this.remember = function(cards) {
-    cards = _.map(cards, santizeCard);
-    console.log({
-      what: 'added to memory',
-      cards: cards
-    });
-    memory.push(cards);
+  var remember = this.remember = function(match) {
+    memory.push(sanitizeMatch(match));
     render();
   };
 };

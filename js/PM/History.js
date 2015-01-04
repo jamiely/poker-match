@@ -15,7 +15,7 @@ PM.History = PM.History || function() {
       '</span>';
   }
 
-  function santizeCard(card) {
+  function sanitizeCard(card) {
     return {
       jalCardValue: card.jalCardValue,
       jalBoardCoordinates: card.jalBoardCoordinates,
@@ -23,22 +23,25 @@ PM.History = PM.History || function() {
     };
   }
 
+  function sanitizeMatch(m) {
+    return {
+      matchType: m.matchType,
+      cards: _.map(m.match, sanitizeCard)
+    };
+  }
+
   function render() {
     var htmlStr = '<ul class="history">' +
       _.map(memory.reverse(), function(item) {
-        return '<li class="item">' + _.pluck(item, 'display').join(',') + '</li>';
+        return '<li class="item">' + _.pluck(item.cards, 'display').join(',') + 
+          ' (' + item.matchType + ')</li>';
       }).join('') +
       '</ul>';
     document.getElementById('history').innerHTML = htmlStr;
   }
 
-  var remember = this.remember = function(cards) {
-    cards = _.map(cards, santizeCard);
-    console.log({
-      what: 'added to memory',
-      cards: cards
-    });
-    memory.push(cards);
+  var remember = this.remember = function(match) {
+    memory.push(sanitizeMatch(match));
     render();
   };
 };

@@ -25,7 +25,10 @@ PM.App = PM.App || function(config) {
   cardSwapper.signalCardGroupDropped.add(function(cards) {
     console.log('CARDS DROPPED');
     console.log(cards);
-    history.remember(cards);
+    //history.remember(cards);
+  });
+  cardSwapper.signalMatchFound.add(function(match) {
+    history.remember(match);
   });
   game.state.add('main', gameState);
 
