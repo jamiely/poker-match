@@ -1,12 +1,15 @@
-PM.Matcher = PM.Matcher || function(board) {
+PM.Matcher = PM.Matcher || function(board, config) {
+  config = config || {};
+
   var MATCH = {
     WILD: 'wild',
     FLUSH: 'flush',
     STRAIGHT: 'straight',
     KIND: 'kind'
   };
-  var debug = true;
+  var debug = false;
   var reconciler = new PM.MatchReconciler();
+  var minimumFlushLength = config.minimumFlushLength || 5;
 
   function log(what) {
     if(! debug) return;
@@ -22,7 +25,7 @@ PM.Matcher = PM.Matcher || function(board) {
     var len = m.match.length;
 
     if(m.matchType === MATCH.KIND && len > 2) return true;
-    if(m.matchType === MATCH.FLUSH && len > 4) return true;
+    if(m.matchType === MATCH.FLUSH && len >= minimumFlushLength) return true;
     if(m.matchType === MATCH.STRAIGHT && len > 2) return true;
 
     //console.log({
@@ -47,7 +50,9 @@ PM.Matcher = PM.Matcher || function(board) {
 
   function mergeUnion(orig) {
     return function (a, b) {
-      if(a.matchType !== b.matchType) throw 'cannot merge matches with different match types';
+      if(a.matchType !== b.matchType) {
+        throw 'cannot merge matches with different match types';
+      }
 
       return {
         matchType: a.matchType,
@@ -60,14 +65,20 @@ PM.Matcher = PM.Matcher || function(board) {
     return a && b && a.jalCardValue && b.jalCardValue;
   }
 
-  function kindPredicate(a, b) {
-    return validCardPredicate(a, b) && 
-      a.jalCardValue.value === b.jalCardValue.value;
+  function kindPredicate(orig) {
+    return function (a, b) {
+      return validCardPredicate(a, b) && 
+        orig.jalCardValue.value == a.jalCardValue.value &&
+        a.jalCardValue.value === b.jalCardValue.value;
+    };
   }
 
-  function flushPredicate(a, b) {
-    return validCardPredicate(a, b) && 
-      a.jalCardValue.suit === b.jalCardValue.suit;
+  function flushPredicate(orig) {
+    return function (a, b) {
+      return validCardPredicate(a, b) && 
+        orig.jalCardValue.suit == a.jalCardValue.suit &&
+        a.jalCardValue.suit === b.jalCardValue.suit;
+    };
   }
 
   var straightOrder = '2 3 4 5 6 7 8 9 10 J Q K A'.split(' ');
@@ -98,8 +109,12 @@ PM.Matcher = PM.Matcher || function(board) {
       return mem;
     }, {});
     return [
-      container(MATCH.FLUSH, function(dir){ return flushPredicate}),
-      container(MATCH.KIND, function(dir) { return kindPredicate}),
+      container(MATCH.FLUSH, function(dir) { 
+        return flushPredicate(original); 
+      }),
+      container(MATCH.KIND, function(dir) { 
+        return kindPredicate(original);
+      }),
       // this only goes backwards
       container(MATCH.STRAIGHT, function(dir) {
         // capture this value for the next iteration

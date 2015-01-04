@@ -19,6 +19,11 @@ PM.CardSelector = PM.CardSelector || function(board, onSelect) {
       card: board.cardInDirection(card, PM.Direction.Down)
     });
     if(selectedCard) {
+      if(selectedCard === card) {
+        selectedCard = null;
+        return;
+      }
+
       console.log('checking if selected card is adjacent');
       // if the card is adjacent to one already selected
       // then we perform the swap.

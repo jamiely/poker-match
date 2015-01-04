@@ -6,7 +6,9 @@ describe("PM.Matcher", function() {
   //"A♠|9♥|A♠|9♥|A♠"
   function newMatcherWithBoard(boardStr) {
     var board = new PM.BoardParser().parse(boardStr);
-    var matcher = new PM.Matcher(board);
+    var matcher = new PM.Matcher(board, {
+      minimumFlushLength: 4
+    });
     return {
       matcher: matcher,
       board: board,
@@ -30,73 +32,73 @@ describe("PM.Matcher", function() {
     matchType: 'kind',
     length: 3
   };
-  //it("matches kinds horizontally", function() {
-    //var m = newMatcherWithBoard([
-      //"A♠|9♥|A♠|9♥|A♠",
-      //"9♥|5♠|5♥|5♠|9♥",
-      //"A♠|9♥|A♠|9♥|A♠",
-      //"9♥|A♠|9♥|A♠|9♥",
-      //"A♠|9♥|A♠|9♥|A♠"
-    //].join('\n'));
-    //expectMatch(m, 1, 1, kindMatchInfo);
-    //expectMatch(m, 2, 1, kindMatchInfo);
-    //expectMatch(m, 3, 1, kindMatchInfo);
-    //expectNoMatch(m, 0,0);
-    //expectNoMatch(m, 1,0);
-    //expectNoMatch(m, 0,1);
-  //});
-  //it("matches kinds vertically", function() {
-    //var m = newMatcherWithBoard([
-      //"A♠|9♥|A♠|9♥|A♠",
-      //"9♥|5♠|9♥|9♠|9♥",
-      //"A♠|5♥|A♠|9♥|A♠",
-      //"9♥|5♠|9♥|A♠|9♥",
-      //"A♠|9♥|A♠|9♥|A♠"
-    //].join('\n'));
-    //expectMatch(m, 1, 1, kindMatchInfo);
-    //expectMatch(m, 1, 2, kindMatchInfo);
-    //expectMatch(m, 1, 3, kindMatchInfo);
-    //expectNoMatch(m, 0,0);
-    //expectNoMatch(m, 1,0);
-    //expectNoMatch(m, 0,1);
-  //});
+  it("matches kinds horizontally", function() {
+    var m = newMatcherWithBoard([
+      "A♠|9♥|A♠|9♥|A♠",
+      "9♥|5♠|5♥|5♠|9♥",
+      "A♠|9♥|A♠|9♥|A♠",
+      "9♥|A♠|9♥|A♠|9♥",
+      "A♠|9♥|A♠|9♥|A♠"
+    ].join('\n'));
+    expectMatch(m, 1, 1, kindMatchInfo);
+    expectMatch(m, 2, 1, kindMatchInfo);
+    expectMatch(m, 3, 1, kindMatchInfo);
+    expectNoMatch(m, 0,0);
+    expectNoMatch(m, 1,0);
+    expectNoMatch(m, 0,1);
+  });
+  it("matches kinds vertically", function() {
+    var m = newMatcherWithBoard([
+      "A♠|9♥|A♠|9♥|A♠",
+      "9♥|5♠|9♥|9♠|9♥",
+      "A♠|5♥|A♠|9♥|A♠",
+      "9♥|5♠|9♥|A♠|9♥",
+      "A♠|9♥|A♠|9♥|A♠"
+    ].join('\n'));
+    expectMatch(m, 1, 1, kindMatchInfo);
+    expectMatch(m, 1, 2, kindMatchInfo);
+    expectMatch(m, 1, 3, kindMatchInfo);
+    expectNoMatch(m, 0,0);
+    expectNoMatch(m, 1,0);
+    expectNoMatch(m, 0,1);
+  });
 
-  //var flushMatchInfo = {
-    //matchType: 'flush',
-    //length: 4
-  //};
-  //it("matches flushes horizontally", function() {
-    //var m = newMatcherWithBoard([
-      //"A♠|9♥|A♠|9♥|A♠",
-      //"9♥|A♣|9♣|A♣|9♣",
-      //"A♠|9♥|A♠|9♥|A♠",
-      //"9♥|A♠|9♥|A♠|9♥",
-      //"A♠|9♥|A♠|9♥|A♠"
-    //].join('\n'));
-    //expectMatch(m, 1, 1, flushMatchInfo);
-    //expectMatch(m, 2, 1, flushMatchInfo);
-    //expectMatch(m, 3, 1, flushMatchInfo);
-    //expectMatch(m, 4, 1, flushMatchInfo);
-    //expectNoMatch(m, 0,0);
-    //expectNoMatch(m, 1,0);
-    //expectNoMatch(m, 0,1);
-  //});
-  //it("matches flushes vertically", function() {
-    //var m = newMatcherWithBoard([
-      //"A♠|9♥|A♠|9♥|A♠",
-      //"9♥|A♣|9♥|A♠|9♥",
-      //"A♠|9♣|A♠|9♥|A♠",
-      //"9♥|A♣|9♥|A♠|9♥",
-      //"A♠|9♣|A♠|9♥|A♠"
-    //].join('\n'));
-    //expectMatch(m, 1, 1, flushMatchInfo);
-    //expectMatch(m, 1, 2, flushMatchInfo);
-    //expectMatch(m, 1, 3, flushMatchInfo);
-    //expectMatch(m, 1, 4, flushMatchInfo);
-    //expectNoMatch(m, 0,0);
-    //expectNoMatch(m, 1,0);
-    //expectNoMatch(m, 0,1);
-  //});
+  var flushMatchInfo = {
+    matchType: 'flush',
+    length: 4
+  };
+  it("matches flushes horizontally", function() {
+    var m = newMatcherWithBoard([
+      "A♠|9♥|A♠|9♥|A♠",
+      "9♥|A♣|9♣|A♣|9♣",
+      "A♠|9♥|A♠|9♥|A♠",
+      "9♥|A♠|9♥|A♠|9♥",
+      "A♠|9♥|A♠|9♥|A♠"
+    ].join('\n'));
+    expectMatch(m, 1, 1, flushMatchInfo);
+    expectMatch(m, 2, 1, flushMatchInfo);
+    expectMatch(m, 3, 1, flushMatchInfo);
+    expectMatch(m, 4, 1, flushMatchInfo);
+    expectNoMatch(m, 0,0);
+    expectNoMatch(m, 1,0);
+    expectNoMatch(m, 0,1);
+  });
+  it("matches flushes vertically", function() {
+    var m = newMatcherWithBoard([
+      "A♠|9♥|A♠|9♥|A♠",
+      "9♥|A♣|9♥|A♠|9♥",
+      "A♠|9♣|A♠|9♥|A♠",
+      "9♥|A♣|9♥|A♠|9♥",
+      "A♠|9♣|A♠|9♥|A♠"
+    ].join('\n'));
+    expectMatch(m, 1, 1, flushMatchInfo);
+    expectMatch(m, 1, 2, flushMatchInfo);
+    expectMatch(m, 1, 3, flushMatchInfo);
+    expectMatch(m, 1, 4, flushMatchInfo);
+    expectNoMatch(m, 0,0);
+    expectNoMatch(m, 1,0);
+    expectNoMatch(m, 0,1);
+  });
 
   var straightMatchInfo = {
     matchType: 'straight',

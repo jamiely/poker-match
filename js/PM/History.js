@@ -32,7 +32,7 @@ PM.History = PM.History || function() {
 
   function render() {
     var htmlStr = '<ul class="history">' +
-      _.map(memory.reverse(), function(item) {
+      _.map(_.clone(memory).reverse(), function(item) {
         return '<li class="item">' + _.pluck(item.cards, 'display').join(',') + 
           ' (' + item.matchType + ')</li>';
       }).join('') +
