@@ -5,6 +5,18 @@ PM.Matcher = PM.Matcher || function(board) {
     STRAIGHT: 'straight',
     KIND: 'kind'
   };
+  var debug = true;
+  var reconciler = new PM.MatchReconciler();
+
+  function log(what) {
+    if(! debug) return;
+    console.log(what);
+  }
+
+  function prettyMatch(m) {
+    m._matchHash = reconciler.matchDisplay(m);
+    return m;
+  }
 
   function matchAcceptable(m) {
     var len = m.match.length;
@@ -21,13 +33,25 @@ PM.Matcher = PM.Matcher || function(board) {
     return false;
   }
 
-  function mergeUnion(orig, a, b) {
+  // returns distinct cards based on location
+  function distinctCards(cards) {
+    var cache = {};
+    _.each(cards, function(c) {
+      var key = c.jalBoardCoordinates.toString();
+      if(cache[key]) return;
+
+      cache[key] = c;
+    });
+    return _.values(cache);
+  }
+
+  function mergeUnion(orig) {
     return function (a, b) {
       if(a.matchType !== b.matchType) throw 'cannot merge matches with different match types';
 
       return {
         matchType: a.matchType,
-        match: _.without(a.match.concat(b.match), orig).concat([orig])
+        match: distinctCards(_.flatten([a.match,b.match,[orig]]))
       };
     };
   }
@@ -82,21 +106,16 @@ PM.Matcher = PM.Matcher || function(board) {
         var nextValue = getNextStraightValue(nextStraightValues[dir.toString()], dir);
         nextStraightValues[dir.toString()] = nextValue;
         return function(a, b) {
-          //console.log({
-            //what: 'straight predicate',
-            //nextValue: nextValue,
-            //aCV: a.jalCardValue,
-            //aBC: a.jalBoardCoordinates,
-            //bCV: b.jalCardValue,
-            //bBC: b.jalBoardCoordinates,
-            //dir: dir,
-            //nextStraightValues: nextStraightValues,
-            //originalCV: original.jalCardValue,
-            //originalBC: original.jalBoardCoordinates
-          //});
-          return validCardPredicate(a, b) && 
+          var result = validCardPredicate(a, b) && 
             nextValue !== null &&
             b.jalCardValue.value === nextValue;
+
+          if(!result) {
+            // invalidate this predicate
+            nextStraightValues[dir.toString()] = null;
+          }
+
+          return result;
         };
       })
     ];
@@ -139,13 +158,6 @@ PM.Matcher = PM.Matcher || function(board) {
       return m.matchType;
     });
 
-    //console.log({
-      //what: 'mergeMatches',
-      //all: all,
-      //kinds: kinds,
-      //flushes: flushes
-    //});
-
     var merge = mergeUnion(anchor);
 
     var results = _.map(_.keys(parts), function(matchType) {
@@ -153,8 +165,21 @@ PM.Matcher = PM.Matcher || function(board) {
       return reduced;
     });
 
+    log({
+      what: 'mergeMatches',
+      all: all,
+      parts: parts,
+      merge: merge,
+      results: _.map(results, prettyMatch)
+    });
+
 
     return results;
+  }
+
+  function makeMatchCardsDistinct(m) {
+    m.match = distinctCards(m.match);
+    return m;
   }
 
   // finds all the matches in the passed directions, and
@@ -162,11 +187,28 @@ PM.Matcher = PM.Matcher || function(board) {
   function mergedMatchesInDirections(anchor, dirs) {
     var matches = _.reduce(dirs, function(mem, dir) {
       var matches = matchInDir(anchor, dir, getBaseMatches(anchor));
-      
+      log({
+        what: 'mergedMatchesInDirections matchInDir',
+        dir: dir,
+        anchor: anchor,
+        matches: _.map(matches, prettyMatch)
+      });
+      matches = _.map(matches, makeMatchCardsDistinct);
+      log({
+        what: 'mergedMatchesInDirections makeMatchCardsDistinct',
+        matches: _.map(matches, prettyMatch)
+      });
       return mem.concat(matches);
     }, []);
     var straights = _.filter(matches, function(m){
       return m.matchType === MATCH.STRAIGHT;
+    });
+    log({
+      what: 'mergedMatchesInDirections',
+      straights: straights,
+      allMatches: _.map(matches, prettyMatch),
+      anchor: anchor,
+      dirs: dirs
     });
 
     return mergeMatches(anchor, matches);
@@ -174,19 +216,24 @@ PM.Matcher = PM.Matcher || function(board) {
 
   // Use to return a group of cards that match
   var matchFromCard = this.matchFromCard = function(original) {
-    //console.log({
-      //what: 'matchCards',
-      //original: original
-    //});
+    log({
+      what: 'matchCards',
+      original: original
+    });
 
     var merged = _.reduce(PM.Axis.All, function(mem, axis) {
-      return mem.concat(mergedMatchesInDirections(original,axis));
+      var m = mergedMatchesInDirections(original,axis);
+      log({
+        what: 'merged reduced mergedMatchesInDirections',
+        matches: _.map(m, prettyMatch)
+      });
+      return mem.concat(m);
     }, []);
 
-    //console.log({
-      //what: 'merged',
-      //merged: merged
-    //});
+    log({
+      what: 'merged',
+      merged: _.map(merged, prettyMatch)
+    });
 
     return _.filter(merged, matchAcceptable);
   }

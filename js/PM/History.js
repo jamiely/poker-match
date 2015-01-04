@@ -9,7 +9,10 @@ PM.History = PM.History || function() {
   };
 
   function displayCard(card) {
-    return card.jalCardValue.value + unicodeSuits[card.jalCardValue.suit];
+    return '<span class="' + card.jalCardValue.suit + '">' +
+      card.jalCardValue.value + 
+      unicodeSuits[card.jalCardValue.suit] +
+      '</span>';
   }
 
   function santizeCard(card) {

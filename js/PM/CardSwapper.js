@@ -6,6 +6,13 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
   var createCardbackForCard = args.cardFactory.createCardbackForCard;
   var killCard = args.cardFactory.killCard;
   var createCard = args.cardFactory.createCard;
+  var debug = false;
+
+  function log(what) {
+    if(! debug) return;
+
+    console.log(what);
+  }
 
   var signalCardGroupDropped = this.signalCardGroupDropped = new Phaser.Signal();
 
@@ -51,14 +58,21 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
       }), function(m) {
         return m.matches && m.matches.length > 0;
       });
+
+      var allMatches = _.reduce(matches, function(memo, m) {
+        return memo.concat(m.matches);
+      }, []);
+
+      var unique = new PM.MatchReconciler().uniqueMatches(allMatches);
+
       console.log({
-        what: 'matches',
-        matches: matches
+        what: 'tryMatches',
+        matches: matches,
+        allMatches: allMatches,
+        uniqueMatches: unique
       });
 
-      _.each(matches, function(m) {
-        _.each(m.matches, disappearMatch);
-      });
+      _.each(unique, disappearMatch);
     }
     function swapCoordinates() {
       // swap the coordinates of the cards
@@ -196,7 +210,7 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
   function dropColumnFromPt(pt, complete, newCardCreated) {
     complete = complete || function(){};
 
-    console.log({
+    log({
       what: 'dropColumnFromPt',
       pt: pt
     });

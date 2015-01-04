@@ -132,6 +132,50 @@ describe("PM.Matcher", function() {
     expectNoMatch(m, 1,0);
     expectNoMatch(m, 0,1);
   });
+  it('matches straights horizontally without breaks case 1', function() {
+    var m = newMatcherWithBoard([
+      "A♠|9♥|A♠|9♥|A♠",
+      "2♥|3♠|4♥|A♠|6♥",
+      "A♠|9♥|A♠|9♥|A♠",
+      "9♥|A♠|9♥|A♠|9♥",
+      "A♠|9♥|A♠|9♥|A♠"
+    ].join('\n'));
+    expectMatch(m, 0, 1, straightMatchInfo);
+    expectMatch(m, 1, 1, straightMatchInfo);
+    expectMatch(m, 2, 1, straightMatchInfo);
+    expectNoMatch(m, 0,0);
+    expectNoMatch(m, 1,0);
+  });
+  it('matches straights horizontally without breaks case 2', function() {
+    var m = newMatcherWithBoard([
+      "9♥|A♠|9♥|A♠|9♥|A♠",
+      "A♠|2♥|A♠|4♥|5♠|6♥",
+      "9♥|A♠|9♥|A♠|9♥|A♠",
+      "A♠|9♥|A♠|9♥|A♠|9♥",
+      "9♥|A♠|9♥|A♠|9♥|A♠"
+    ].join('\n'));
+    expectMatch(m, 3, 1, straightMatchInfo);
+    expectMatch(m, 4, 1, straightMatchInfo);
+    expectMatch(m, 5, 1, straightMatchInfo);
+    expectNoMatch(m, 0,1);
+    expectNoMatch(m, 1,1);
+    expectNoMatch(m, 1,0);
+  });
+  it('matches straights horizontally without dupes case 1', function() {
+    var m = newMatcherWithBoard([
+      "9♥|A♠|9♥|A♠|9♥|A♠",
+      "A♠|9♥|4♠|4♥|5♠|6♥",
+      "9♥|A♠|9♥|A♠|9♥|A♠",
+      "A♠|9♥|A♠|9♥|A♠|9♥",
+      "9♥|A♠|9♥|A♠|9♥|A♠"
+    ].join('\n'));
+    expectMatch(m, 3, 1, straightMatchInfo);
+    expectMatch(m, 4, 1, straightMatchInfo);
+    expectMatch(m, 5, 1, straightMatchInfo);
+    expectNoMatch(m, 0,1);
+    expectNoMatch(m, 1,1);
+    expectNoMatch(m, 1,0);
+  });
   xit('matches kinds with a wildcard');
   xit('matches flushes with a wildcard');
   xit('matches straights with a wildcard');
