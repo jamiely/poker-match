@@ -60,8 +60,12 @@ PM.CardFactory = PM.CardFactory || function(gameBoard, cardSelector) {
     // using Phaser. It may be better to store this in a separate
     // hash.
     card.jalBoardCoordinates = new Phaser.Point(i, j);
+    var padding = config.cardPadding;
+    card.hitArea = new Phaser.Rectangle(padding.x, padding.y, 
+                                        card.width - 2*padding.x, card.height-2*padding.y);
     card.scale.setTo(config.cardScale, config.cardScale);
     card.inputEnabled = true;
+
     if(cardSelector.onCardDown) {
       card.events.onInputDown.add(cardSelector.onCardDown, this);
     }

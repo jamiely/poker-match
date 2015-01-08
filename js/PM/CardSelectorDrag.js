@@ -30,7 +30,8 @@ PM.CardSelectorDrag = function(board, onSelect) {
   }
 
   var onCardOver = this.onCardOver = function(card, pointer) {
-    console.log(pointer.x);
+    console.log(card);
+    console.log(card.hitArea);
     if(! pointer.isDown) {
       return;
     }

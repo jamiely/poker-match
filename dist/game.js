@@ -233,8 +233,12 @@ PM.CardFactory = PM.CardFactory || function(gameBoard, cardSelector) {
     // using Phaser. It may be better to store this in a separate
     // hash.
     card.jalBoardCoordinates = new Phaser.Point(i, j);
+    var padding = config.cardPadding;
+    card.hitArea = new Phaser.Rectangle(padding.x, padding.y, 
+                                        card.width - 2*padding.x, card.height-2*padding.y);
     card.scale.setTo(config.cardScale, config.cardScale);
     card.inputEnabled = true;
+
     if(cardSelector.onCardDown) {
       card.events.onInputDown.add(cardSelector.onCardDown, this);
     }
@@ -372,7 +376,8 @@ PM.CardSelectorDrag = function(board, onSelect) {
   }
 
   var onCardOver = this.onCardOver = function(card, pointer) {
-    console.log(pointer.x);
+    console.log(card);
+    console.log(card.hitArea);
     if(! pointer.isDown) {
       return;
     }
@@ -706,9 +711,11 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
 // Holds configuration with appropriate defaults
 PM.Configuration = PM.Configuration || function() {
   this.cardSize = new Phaser.Point(140, 190);
-  this.cardSpacing = new Phaser.Point(10, 10);
+  this.cardSpacing = new Phaser.Point(2, 2);
   this.boardSize = new Phaser.Point(10, 6);
   this.gameSize = new Phaser.Point(800, 600);
+
+  this.cardPadding = new Phaser.Point(20, 40);
   // this is the amount of space for each cell
   this.boardSpacing = Phaser.Point.divide(this.gameSize, this.boardSize);
   // now we need the ratio of the spacing to the size of each card
