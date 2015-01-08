@@ -39,6 +39,27 @@ PM.Board = PM.Board || function(boardSize) {
       (p1.y === p2.y && Math.abs(p1.x - p2.x) === 1);
   };
 
+  var Dir = PM.Direction;
+
+  var Diagonal = {
+    NE: new Phaser.Point(Dir.Right.x, Dir.Up.y),
+    SE: new Phaser.Point(Dir.Right.x, Dir.Down.y),
+    SW: new Phaser.Point(Dir.Left.x, Dir.Down.y),
+    NW: new Phaser.Point(Dir.Left.x, Dir.Up.y)
+  };
+  Diagonal.All = _.values(Diagonal);
+
+  console.log(Diagonal);
+
+  var isAdjacentOrDiagonal = this.isAdjacentOrDiagonal = function(c1, c2) {
+    if(isAdjacent(c1, c2)) return true;
+    var p1 = c1.jalBoardCoordinates, p2 = c2.jalBoardCoordinates;
+
+    return _.some(Diagonal.All, function(diag) {
+      return Phaser.Point.add(p1, diag).equals(p2);
+    });
+  };
+
   var ptInBounds = this.ptInBounds = function(pt) {
     return pt.x >= 0 && pt.x < boardSize.x &&
       pt.y >= 0 && pt.y < boardSize.y;

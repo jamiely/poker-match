@@ -5,10 +5,12 @@ var PM = PM || {};
 PM.App = PM.App || function(config) {
   var gb = new PM.GameBoard(config);
   var board = gb.board;
-  var matcher = new PM.Matcher(board);
+  //var matcher = new PM.Matcher(board);
+  var matcherB = new PM.PreselectedMatcher();
   var game = gb.game;
-  var cardSelector = new PM.CardSelector(board, function(a, b) {
-    cardSwapper.swap(a, b);
+  var cardSelector = new PM.CardSelectorDrag(board, function(cards) {
+    console.log(cards);
+    cardSwapper.tryMatches(cards);
   });
   var cardFactory = new PM.CardFactory(gb, cardSelector);
   var renderer = new PM.Renderer(game, function() {
@@ -16,7 +18,7 @@ PM.App = PM.App || function(config) {
   });
   var cardSwapper = new PM.CardSwapper({
     gameBoard: gb,
-    matcher: matcher,
+    matcher: matcherB,
     cardFactory: cardFactory
   });
   var gameState = { 
@@ -95,6 +97,27 @@ PM.Board = PM.Board || function(boardSize) {
 
     return (p1.x === p2.x && Math.abs(p1.y - p2.y) === 1) ||
       (p1.y === p2.y && Math.abs(p1.x - p2.x) === 1);
+  };
+
+  var Dir = PM.Direction;
+
+  var Diagonal = {
+    NE: new Phaser.Point(Dir.Right.x, Dir.Up.y),
+    SE: new Phaser.Point(Dir.Right.x, Dir.Down.y),
+    SW: new Phaser.Point(Dir.Left.x, Dir.Down.y),
+    NW: new Phaser.Point(Dir.Left.x, Dir.Up.y)
+  };
+  Diagonal.All = _.values(Diagonal);
+
+  console.log(Diagonal);
+
+  var isAdjacentOrDiagonal = this.isAdjacentOrDiagonal = function(c1, c2) {
+    if(isAdjacent(c1, c2)) return true;
+    var p1 = c1.jalBoardCoordinates, p2 = c2.jalBoardCoordinates;
+
+    return _.some(Diagonal.All, function(diag) {
+      return Phaser.Point.add(p1, diag).equals(p2);
+    });
   };
 
   var ptInBounds = this.ptInBounds = function(pt) {
@@ -212,8 +235,15 @@ PM.CardFactory = PM.CardFactory || function(gameBoard, cardSelector) {
     card.jalBoardCoordinates = new Phaser.Point(i, j);
     card.scale.setTo(config.cardScale, config.cardScale);
     card.inputEnabled = true;
-    card.events.onInputDown.add(cardSelector.selectCard, this);
-    card.events.onInputUp.add(cardSelector.releaseCard, this);
+    if(cardSelector.onCardDown) {
+      card.events.onInputDown.add(cardSelector.onCardDown, this);
+    }
+    if(cardSelector.onCardUp) {
+      card.events.onInputUp.add(cardSelector.onCardUp, this);
+    }
+    if(cardSelector.onCardOver) {
+      card.events.onInputOver.add(cardSelector.onCardOver, this);
+    }
 
     return card;
   }
@@ -267,10 +297,10 @@ PM.CardNameParser = PM.CardNameParser || function() {
 PM.CardSelector = PM.CardSelector || function(board, onSelect) {
   var selectedCard;
   var getSelected = this.getSelected = function() {
-    return selectedCard;
+    return [selectedCard];
   };
 
-  var releaseCard = this.releaseCard = function(card, pointer) {
+  var onCardUp = this.onCardUp = function(card, pointer) {
     console.log({
       event: 'release',
       card: card,
@@ -278,7 +308,7 @@ PM.CardSelector = PM.CardSelector || function(board, onSelect) {
     });
   };
 
-  var selectCard = this.selectCard = function(card, pointer) {
+  var onCardDown = this.onCardDown = function(card, pointer) {
     console.log(card.jalCardValue);
     console.log({
       what: 'card in direction down',
@@ -306,6 +336,62 @@ PM.CardSelector = PM.CardSelector || function(board, onSelect) {
       pointer: pointer
     });
     selectedCard = card;
+  }
+};
+
+
+PM.CardSelectorDrag = function(board, onSelect) {
+  var lastCard;
+  var selectedCards = [];
+  var getSelected = this.getSelected = function() {
+    return selectedCards;
+  };
+
+  var onCardUp = this.onCardUp = function(card, pointer) {
+    var copy = _.clone(selectedCards);
+    resetSelected();
+    console.log({
+      what: "oncardup selected cards",
+      cards: copy
+    });
+    onSelect(copy);
+  };
+
+  var onCardDown = this.onCardDown = function(card, pointer) {
+    initSelected(card);
+  };
+
+  function resetSelected() {
+    lastCard = null;
+    selectedCards = [];
+  }
+
+  function initSelected(card) {
+    lastCard = card;
+    selectedCards = [card];
+  }
+
+  var onCardOver = this.onCardOver = function(card, pointer) {
+    console.log(pointer.x);
+    if(! pointer.isDown) {
+      return;
+    }
+    if(! lastCard) {
+      return;
+    }
+    if(selectedCards.indexOf(card) !== -1) {
+      // cannot select a card twice
+      console.log('card already selected');
+      return;
+    }
+
+    if(board.isAdjacentOrDiagonal(lastCard, card)) {
+      console.log('selected card is adjacent to this one');
+      selectedCards.push(card);
+      lastCard = card;
+    } else {
+      console.log('card over is not adjacent to last');
+    }
   }
 };
 
@@ -338,6 +424,42 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
                             pos.y * config.cardSizeSpaced.y);
   }
 
+  var tryMatches = this.tryMatches = function(cards) {
+    //var matches = _.filter(_.map(cards, function(card) {
+      //return {
+        //card: card,
+        //matches: matcher.matchFromCard(card)
+      //};
+    //}), function(m) {
+      //return m.matches && m.matches.length > 0;
+    //});
+
+    var matches = matcher.getMatches(cards);
+
+    //matches = _.filter(matches, function(m) {
+      //return m.matches && m.matches.length > 0;
+    //});
+
+    //var allMatches = _.reduce(matches, function(memo, m) {
+      //return memo.concat(m.matches);
+    //}, []);
+
+    //var unique = new PM.MatchReconciler().uniqueMatches(allMatches);
+    var unique = matches;
+
+    console.log({
+      what: 'tryMatches',
+      matches: matches,
+      //allMatches: allMatches,
+      uniqueMatches: unique
+    });
+
+    _.each(unique, function(m) {
+      signalMatchFound.dispatch(m);
+      disappearMatch(m);
+    });
+  }
+
   // TODO: should the swap have a shadow effect as one is lifted
   // over the other? We can scale the card larger as well to indicate
   // nearness.
@@ -361,35 +483,6 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
       addTween(a, b),
       addTween(b, a)
     ];
-    var tweenCountLeft = tweens.length;
-    function tryMatches() {
-      var matches = _.filter(_.map([a, b], function(card) {
-        return {
-          card: card,
-          matches: matcher.matchFromCard(card)
-        };
-      }), function(m) {
-        return m.matches && m.matches.length > 0;
-      });
-
-      var allMatches = _.reduce(matches, function(memo, m) {
-        return memo.concat(m.matches);
-      }, []);
-
-      var unique = new PM.MatchReconciler().uniqueMatches(allMatches);
-
-      console.log({
-        what: 'tryMatches',
-        matches: matches,
-        allMatches: allMatches,
-        uniqueMatches: unique
-      });
-
-      _.each(unique, function(m) {
-        signalMatchFound.dispatch(m);
-        disappearMatch(m);
-      });
-    }
     function swapCoordinates() {
       // swap the coordinates of the cards
       var tmpCoords = a.jalBoardCoordinates;
@@ -398,13 +491,14 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
       board.saveBoardCoords(a);
       board.saveBoardCoords(b);
     }
+    var tweenCountLeft = tweens.length;
     function onComplete() {
       tweenCountLeft --;
       if(tweenCountLeft === 0) {
         swapCoordinates();
         swapInProgress = false;
         console.log('swap complete');
-        tryMatches();
+        tryMatches([a, b]);
       }
     }
     _.each(tweens, function(t) {
@@ -473,7 +567,6 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
 
     return t;
   }
-
 
   // Use to remove a match
   function disappearMatch(match) {
@@ -613,8 +706,8 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
 // Holds configuration with appropriate defaults
 PM.Configuration = PM.Configuration || function() {
   this.cardSize = new Phaser.Point(140, 190);
-  this.cardSpacing = new Phaser.Point(2, 2);
-  this.boardSize = new Phaser.Point(10, 5);
+  this.cardSpacing = new Phaser.Point(10, 10);
+  this.boardSize = new Phaser.Point(10, 6);
   this.gameSize = new Phaser.Point(800, 600);
   // this is the amount of space for each cell
   this.boardSpacing = Phaser.Point.divide(this.gameSize, this.boardSize);
@@ -779,7 +872,7 @@ PM.Matcher = PM.Matcher || function(board, config) {
     return m;
   }
 
-  function matchAcceptable(m) {
+  var matchAcceptable = this.matchAcceptable = function(m) {
     var len = m.match.length;
 
     if(m.matchType === MATCH.KIND && len > 2) return true;
@@ -792,7 +885,7 @@ PM.Matcher = PM.Matcher || function(board, config) {
     //});
 
     return false;
-  }
+  };
 
   // returns distinct cards based on location
   function distinctCards(cards) {
@@ -853,7 +946,7 @@ PM.Matcher = PM.Matcher || function(board, config) {
     return i >= 0 || i < straightOrder.length ? straightOrder[i] : null;
   }
 
-  function getBaseMatches(original) {
+  var getBaseMatches = this.getBaseMatches = function(original) {
     function container(ty, nextPredicate) {
       return {
         matchType: ty,
@@ -1037,12 +1130,72 @@ PM.Preloader = PM.Preloader || function(game) {
 };
 
 
-PM.Renderer = PM.Renderer || function(game, getSelectedCard) {
-  var render = this.render = _.bind(function() {
-    var c = getSelectedCard();
-    if(c) {
-      game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');
+// Use to match cards which have been preselected. That is,
+// to determine if a group of cards is some type of match.
+PM.PreselectedMatcher = function() {
+  // we need a base matcher for some of the functions
+
+  var getMatches = this.getMatches = function(cards) {
+    console.log('isMatch');
+    var baseMatcher = new PM.Matcher();
+    if(! cards) return false;
+    if(! cards.length) return false;
+    if(cards.length < 2) return false;
+
+    // get the first card to be a base
+    var firstCard = cards[0]; 
+    var lastCard = firstCard;
+    var matches = baseMatcher.getBaseMatches(firstCard);
+
+    console.log({
+      what: 'isMatch',
+      firstCard: firstCard,
+      baseMatches: matches
+    });
+
+    for(var i = 1; i < cards.length; i ++) {
+      card = cards[i];
+      matches = _.filter(matches, function(m) {
+        // always assume we are going right. The direction is embedded
+        // in the order of the cards.
+        var predicate = m.nextPredicate(PM.Direction.Right);
+        var result = predicate(lastCard, card);
+
+        console.log({
+          what: 'isMatch iteration',
+          m: m,
+          result: result
+        });
+
+        return result;
+      });
+
+      // with the matches we have left, add the current card
+      _.each(matches, function(m) {
+        m.match.push(card);
+      });
+
+      lastCard = card;
     }
+
+    var acceptable = _.filter(matches, baseMatcher.matchAcceptable);
+
+    console.log({
+      what: 'isMatch filter loop',
+      matches: matches,
+      acceptableMatches: acceptable
+    });
+
+    return acceptable;
+  };
+};
+
+
+PM.Renderer = PM.Renderer || function(game, getSelectedCards) {
+  var render = this.render = _.bind(function() {
+    _.each(getSelectedCards(), function(c) {
+      game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');
+    });
   }, this);
 };
 

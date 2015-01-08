@@ -26,6 +26,42 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
                             pos.y * config.cardSizeSpaced.y);
   }
 
+  var tryMatches = this.tryMatches = function(cards) {
+    //var matches = _.filter(_.map(cards, function(card) {
+      //return {
+        //card: card,
+        //matches: matcher.matchFromCard(card)
+      //};
+    //}), function(m) {
+      //return m.matches && m.matches.length > 0;
+    //});
+
+    var matches = matcher.getMatches(cards);
+
+    //matches = _.filter(matches, function(m) {
+      //return m.matches && m.matches.length > 0;
+    //});
+
+    //var allMatches = _.reduce(matches, function(memo, m) {
+      //return memo.concat(m.matches);
+    //}, []);
+
+    //var unique = new PM.MatchReconciler().uniqueMatches(allMatches);
+    var unique = matches;
+
+    console.log({
+      what: 'tryMatches',
+      matches: matches,
+      //allMatches: allMatches,
+      uniqueMatches: unique
+    });
+
+    _.each(unique, function(m) {
+      signalMatchFound.dispatch(m);
+      disappearMatch(m);
+    });
+  }
+
   // TODO: should the swap have a shadow effect as one is lifted
   // over the other? We can scale the card larger as well to indicate
   // nearness.
@@ -49,35 +85,6 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
       addTween(a, b),
       addTween(b, a)
     ];
-    var tweenCountLeft = tweens.length;
-    function tryMatches() {
-      var matches = _.filter(_.map([a, b], function(card) {
-        return {
-          card: card,
-          matches: matcher.matchFromCard(card)
-        };
-      }), function(m) {
-        return m.matches && m.matches.length > 0;
-      });
-
-      var allMatches = _.reduce(matches, function(memo, m) {
-        return memo.concat(m.matches);
-      }, []);
-
-      var unique = new PM.MatchReconciler().uniqueMatches(allMatches);
-
-      console.log({
-        what: 'tryMatches',
-        matches: matches,
-        allMatches: allMatches,
-        uniqueMatches: unique
-      });
-
-      _.each(unique, function(m) {
-        signalMatchFound.dispatch(m);
-        disappearMatch(m);
-      });
-    }
     function swapCoordinates() {
       // swap the coordinates of the cards
       var tmpCoords = a.jalBoardCoordinates;
@@ -86,13 +93,14 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
       board.saveBoardCoords(a);
       board.saveBoardCoords(b);
     }
+    var tweenCountLeft = tweens.length;
     function onComplete() {
       tweenCountLeft --;
       if(tweenCountLeft === 0) {
         swapCoordinates();
         swapInProgress = false;
         console.log('swap complete');
-        tryMatches();
+        tryMatches([a, b]);
       }
     }
     _.each(tweens, function(t) {
@@ -161,7 +169,6 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
 
     return t;
   }
-
 
   // Use to remove a match
   function disappearMatch(match) {

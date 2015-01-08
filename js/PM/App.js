@@ -1,10 +1,12 @@
 PM.App = PM.App || function(config) {
   var gb = new PM.GameBoard(config);
   var board = gb.board;
-  var matcher = new PM.Matcher(board);
+  //var matcher = new PM.Matcher(board);
+  var matcherB = new PM.PreselectedMatcher();
   var game = gb.game;
-  var cardSelector = new PM.CardSelector(board, function(a, b) {
-    cardSwapper.swap(a, b);
+  var cardSelector = new PM.CardSelectorDrag(board, function(cards) {
+    console.log(cards);
+    cardSwapper.tryMatches(cards);
   });
   var cardFactory = new PM.CardFactory(gb, cardSelector);
   var renderer = new PM.Renderer(game, function() {
@@ -12,7 +14,7 @@ PM.App = PM.App || function(config) {
   });
   var cardSwapper = new PM.CardSwapper({
     gameBoard: gb,
-    matcher: matcher,
+    matcher: matcherB,
     cardFactory: cardFactory
   });
   var gameState = { 

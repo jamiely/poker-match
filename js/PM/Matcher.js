@@ -21,7 +21,7 @@ PM.Matcher = PM.Matcher || function(board, config) {
     return m;
   }
 
-  function matchAcceptable(m) {
+  var matchAcceptable = this.matchAcceptable = function(m) {
     var len = m.match.length;
 
     if(m.matchType === MATCH.KIND && len > 2) return true;
@@ -34,7 +34,7 @@ PM.Matcher = PM.Matcher || function(board, config) {
     //});
 
     return false;
-  }
+  };
 
   // returns distinct cards based on location
   function distinctCards(cards) {
@@ -95,7 +95,7 @@ PM.Matcher = PM.Matcher || function(board, config) {
     return i >= 0 || i < straightOrder.length ? straightOrder[i] : null;
   }
 
-  function getBaseMatches(original) {
+  var getBaseMatches = this.getBaseMatches = function(original) {
     function container(ty, nextPredicate) {
       return {
         matchType: ty,

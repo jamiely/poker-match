@@ -1,9 +1,8 @@
-PM.Renderer = PM.Renderer || function(game, getSelectedCard) {
+PM.Renderer = PM.Renderer || function(game, getSelectedCards) {
   var render = this.render = _.bind(function() {
-    var c = getSelectedCard();
-    if(c) {
+    _.each(getSelectedCards(), function(c) {
       game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');
-    }
+    });
   }, this);
 };
 

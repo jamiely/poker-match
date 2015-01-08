@@ -1,10 +1,10 @@
 PM.CardSelector = PM.CardSelector || function(board, onSelect) {
   var selectedCard;
   var getSelected = this.getSelected = function() {
-    return selectedCard;
+    return [selectedCard];
   };
 
-  var releaseCard = this.releaseCard = function(card, pointer) {
+  var onCardUp = this.onCardUp = function(card, pointer) {
     console.log({
       event: 'release',
       card: card,
@@ -12,7 +12,7 @@ PM.CardSelector = PM.CardSelector || function(board, onSelect) {
     });
   };
 
-  var selectCard = this.selectCard = function(card, pointer) {
+  var onCardDown = this.onCardDown = function(card, pointer) {
     console.log(card.jalCardValue);
     console.log({
       what: 'card in direction down',

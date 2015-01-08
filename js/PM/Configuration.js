@@ -1,8 +1,8 @@
 // Holds configuration with appropriate defaults
 PM.Configuration = PM.Configuration || function() {
   this.cardSize = new Phaser.Point(140, 190);
-  this.cardSpacing = new Phaser.Point(2, 2);
-  this.boardSize = new Phaser.Point(10, 5);
+  this.cardSpacing = new Phaser.Point(10, 10);
+  this.boardSize = new Phaser.Point(10, 6);
   this.gameSize = new Phaser.Point(800, 600);
   // this is the amount of space for each cell
   this.boardSpacing = Phaser.Point.divide(this.gameSize, this.boardSize);

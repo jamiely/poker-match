@@ -62,8 +62,15 @@ PM.CardFactory = PM.CardFactory || function(gameBoard, cardSelector) {
     card.jalBoardCoordinates = new Phaser.Point(i, j);
     card.scale.setTo(config.cardScale, config.cardScale);
     card.inputEnabled = true;
-    card.events.onInputDown.add(cardSelector.selectCard, this);
-    card.events.onInputUp.add(cardSelector.releaseCard, this);
+    if(cardSelector.onCardDown) {
+      card.events.onInputDown.add(cardSelector.onCardDown, this);
+    }
+    if(cardSelector.onCardUp) {
+      card.events.onInputUp.add(cardSelector.onCardUp, this);
+    }
+    if(cardSelector.onCardOver) {
+      card.events.onInputOver.add(cardSelector.onCardOver, this);
+    }
 
     return card;
   }
