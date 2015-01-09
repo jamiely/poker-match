@@ -5,7 +5,7 @@ PM.Configuration = PM.Configuration || function() {
   this.boardSize = new Phaser.Point(10, 6);
   this.gameSize = new Phaser.Point(800, 600);
 
-  this.cardPadding = new Phaser.Point(20, 40);
+  this.cardPadding = new Phaser.Point(10, 20);
   // this is the amount of space for each cell
   this.boardSpacing = Phaser.Point.divide(this.gameSize, this.boardSize);
   // now we need the ratio of the spacing to the size of each card
