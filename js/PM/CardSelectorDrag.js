@@ -38,6 +38,15 @@ PM.CardSelectorDrag = function(board, onSelect) {
     if(! lastCard) {
       return;
     }
+
+    // undo last selection by going back over the card
+    if(selectedCards.length > 1 && 
+       selectedCards[selectedCards.length - 2] === card) {
+      selectedCards.pop();
+      lastCard = selectedCards[selectedCards.length - 1];
+      return;
+    }
+
     if(selectedCards.indexOf(card) !== -1) {
       // cannot select a card twice
       console.log('card already selected');
