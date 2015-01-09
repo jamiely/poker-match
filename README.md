@@ -1,6 +1,6 @@
 # intro
 
-Tentatively titled "Poker Match", this is a match-3 style game where the
+Tentatively titled "Poker Match", this is a drag to match style game where the
 matches are poker-style hands. The valid hands are shown in the
 instructions on the game page.
 
