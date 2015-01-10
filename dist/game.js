@@ -4,57 +4,13 @@ var PM = PM || {};
 
 PM.App = PM.App || function(config) {
   var gb = new PM.GameBoard(config);
-  var board = gb.board;
-  //var matcher = new PM.Matcher(board);
-  var matcherB = new PM.PreselectedMatcher();
   var game = gb.game;
-  var cardSelector = new PM.CardSelectorDrag(board, function(cards) {
-    console.log(cards);
-    cardSwapper.tryMatches(cards);
-  });
-  var cardFactory = new PM.CardFactory(gb, cardSelector);
-  var renderer = new PM.Renderer(game, function() {
-    return cardSelector.getSelected();
-  });
-  var cardSwapper = new PM.CardSwapper({
-    gameBoard: gb,
-    matcher: matcherB,
-    cardFactory: cardFactory
-  });
-  var gameState = { 
-    preload: preload, 
-    create: create,
-    render: renderer.render
+  game.state.add('playing', new PM.GameStates.Playing(gb));
+  game.state.add('main-menu', new PM.GameStates.MainMenu(game));
+
+  var run = this.run = function() {
+    game.state.start('main-menu');
   };
-  var history = new PM.History();
-
-  cardSwapper.signalCardGroupDropped.add(function(cards) {
-    console.log('CARDS DROPPED');
-    console.log(cards);
-    //history.remember(cards);
-  });
-  cardSwapper.signalMatchFound.add(function(match) {
-    history.remember(match);
-  });
-  game.state.add('main', gameState);
-
-  // accessible from outside
-  this.run = function() {
-    game.state.start('main');
-  };
-
-  function preload() {
-    new PM.Preloader(game).preload();
-  }
-
-  function create() {
-    spawnBoard();
-  }
-
-  // fill the screen with as many cards as possible
-  function spawnBoard() {
-    gb.board.saveCards(cardFactory.createInitialCards());
-  }
 };
 
 
@@ -779,6 +735,127 @@ PM.GameBoard = PM.GameBoard || function(config) {
                               config.element);
 };
 
+
+PM.GameStates = {};
+
+
+
+PM.GameStates.MainMenu = function(game) {
+  var uiAtlasName = 'ui';
+  function button(strText, clickHandler) {
+    var style = { 
+      font: "20px Helvetica", 
+      fill: "#EEEEEE", 
+      align: "center" 
+    };
+    var text = game.add.text(0, 0, strText.toUpperCase(), style);
+    text.anchor.setTo(0.5, 0.5);
+    var button = game.add.button(
+      100, 
+      100, 
+      uiAtlasName, 
+      clickHandler, 
+      this,
+      'blue_button03.png',
+      'blue_button03.png',
+      'blue_button03.png',
+      'blue_button03.png');
+      //'blue_button04.png',
+      //'blue_button04.png',
+      //'blue_button03.png',
+      //'blue_button04.png');
+    button.anchor.setTo(0.5, 0.5);
+
+    button.addChild(text);
+    button.onInputUp.add(function() {
+      //text.anchor.setTo(0.5, 0.6);
+    }, this);
+    return button;
+  }
+
+  var preload = this.preload = function() {
+    game.load.atlasXML(
+      uiAtlasName, 
+      'assets/sprites/blueSheet.png', 
+      'assets/sprites/blueSheet.xml');
+  };
+  var create = this.create = function() {
+    var gameStateChanger = function(stateName) {
+      return function() {
+        game.state.start(stateName);
+      };
+    };
+    var notImplemented = function() {
+      alert('not implemented yet');
+    };
+
+    var buttons = [
+      button('Score Attack', gameStateChanger('playing')),
+      button('Challenges', notImplemented),
+      button('High Scores', notImplemented),
+      button('Options', notImplemented)];
+
+    var yPadding = 10;
+    // place near bottom of screen.
+    var yPos = game.world.height - 3 * buttons[0].height;
+    _.each(_.clone(buttons).reverse(), function(b) {
+      b.x = game.world.centerX;
+      b.y = yPos;
+      yPos -= b.height + yPadding;
+    });
+  };
+};
+
+
+PM.GameStates.Playing = function(gameBoard) {
+  var gb = gameBoard;
+  var game = gb.game;
+  var board = gb.board;
+  //var matcher = new PM.Matcher(board);
+  var matcherB = new PM.PreselectedMatcher();
+  var cardSelector = new PM.CardSelectorDrag(board, function(cards) {
+    console.log(cards);
+    cardSwapper.tryMatches(cards);
+  });
+  var cardFactory = new PM.CardFactory(gb, cardSelector);
+  var renderer = new PM.Renderer(game, function() {
+    return cardSelector.getSelected();
+  });
+  var cardSwapper = new PM.CardSwapper({
+    gameBoard: gb,
+    matcher: matcherB,
+    cardFactory: cardFactory
+  });
+
+  var history = new PM.History();
+
+  cardSwapper.signalCardGroupDropped.add(function(cards) {
+    console.log('CARDS DROPPED');
+    console.log(cards);
+    //history.remember(cards);
+  });
+  cardSwapper.signalMatchFound.add(function(match) {
+    history.remember(match);
+  });
+
+  // fill the screen with as many cards as possible
+  function spawnBoard() {
+    gb.board.saveCards(cardFactory.createInitialCards());
+  }
+
+  // gamestate functions
+  var preload = this.preload = function() {
+    new PM.Preloader(game).preload();
+  };
+
+  var create = this.create = function() {
+    spawnBoard();
+  };
+
+  var render = this.render = function() {
+    renderer.render();
+  };
+};
 
 // keeps track of play history
 PM.History = PM.History || function() {
