@@ -1,5 +1,6 @@
-PM.Renderer = PM.Renderer || function(game, getSelectedCards) {
+PM.Renderer = PM.Renderer || function(game, history, getSelectedCards) {
   var graphics;
+  var scoreText;
  
   function initGraphics(){
     if(graphics) {
@@ -12,13 +13,30 @@ PM.Renderer = PM.Renderer || function(game, getSelectedCards) {
     cardLine.addChild(graphics);
   }
 
+  function initText() {
+    if(scoreText) return;
+
+    var style = { 
+      font: "20px Arial", 
+      fill: "#FF0000", 
+      align: "center" 
+    };
+    scoreText = game.add.text(0, 0, "0", style);
+    scoreText.anchor.setTo(1, 0);
+    scoreText.x = game.world.width;
+  }
+
+  function init() {
+    initGraphics();
+    initText();
+  }
+
   function cardCenter(card) {
     return new Phaser.Point(card.x + card.width / 2, card.y + card.height / 2);
   }
 
   var lastCardsDrawn = null;
   function drawLine(cards) {
-    initGraphics();
 
     graphics.clear();
 
@@ -56,7 +74,9 @@ PM.Renderer = PM.Renderer || function(game, getSelectedCards) {
   }
 
   var render = this.render = _.bind(function() {
+    init();
     drawLine(getSelectedCards());
+    scoreText.text = "Score: " + history.getScore().toString();
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');

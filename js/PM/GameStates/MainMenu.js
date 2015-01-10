@@ -2,11 +2,11 @@ PM.GameStates.MainMenu = function(game) {
   var uiAtlasName = 'ui';
   function button(strText, clickHandler) {
     var style = { 
-      font: "20px Helvetica", 
+      font: "20px Arial", 
       fill: "#EEEEEE", 
       align: "center" 
     };
-    var text = game.add.text(0, 0, strText.toUpperCase(), style);
+    var text = game.add.text(0, 0, strText, style);
     text.anchor.setTo(0.5, 0.5);
     var button = game.add.button(
       100, 

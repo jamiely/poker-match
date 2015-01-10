@@ -677,12 +677,14 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
 PM.Configuration = PM.Configuration || function() {
   this.cardSize = new Phaser.Point(140, 190);
   this.cardSpacing = new Phaser.Point(2, 2);
-  this.boardSize = new Phaser.Point(10, 6);
+  this.boardSize = new Phaser.Point(10, 7);
   this.gameSize = new Phaser.Point(800, 600);
+
+  this.gameBoardSize = new Phaser.Point(600, 600);
 
   this.cardPadding = new Phaser.Point(10, 20);
   // this is the amount of space for each cell
-  this.boardSpacing = Phaser.Point.divide(this.gameSize, this.boardSize);
+  this.boardSpacing = Phaser.Point.divide(this.gameBoardSize, this.boardSize);
   // now we need the ratio of the spacing to the size of each card
   this.cardBoardRatio = Phaser.Point.divide(
     this.boardSpacing, 
@@ -744,11 +746,11 @@ PM.GameStates.MainMenu = function(game) {
   var uiAtlasName = 'ui';
   function button(strText, clickHandler) {
     var style = { 
-      font: "20px Helvetica", 
+      font: "20px Arial", 
       fill: "#EEEEEE", 
       align: "center" 
     };
-    var text = game.add.text(0, 0, strText.toUpperCase(), style);
+    var text = game.add.text(0, 0, strText, style);
     text.anchor.setTo(0.5, 0.5);
     var button = game.add.button(
       100, 
@@ -818,7 +820,8 @@ PM.GameStates.Playing = function(gameBoard) {
     cardSwapper.tryMatches(cards);
   });
   var cardFactory = new PM.CardFactory(gb, cardSelector);
-  var renderer = new PM.Renderer(game, function() {
+  var history = new PM.History();
+  var renderer = new PM.Renderer(game, history, function() {
     return cardSelector.getSelected();
   });
   var cardSwapper = new PM.CardSwapper({
@@ -827,7 +830,6 @@ PM.GameStates.Playing = function(gameBoard) {
     cardFactory: cardFactory
   });
 
-  var history = new PM.History();
 
   cardSwapper.signalCardGroupDropped.add(function(cards) {
     console.log('CARDS DROPPED');
@@ -899,10 +901,35 @@ PM.History = PM.History || function() {
     document.getElementById('history').innerHTML = htmlStr;
   }
 
+  var matchTypeScoreBase = {
+    kind: 1000,
+    straight: 1500,
+    flush: 2000
+  };
+  var matchTypeScoreLengthBonus = {
+    kind: 50,
+    straight: 100,
+    flush: 25
+  };
+
+  function scoreMatch(match) {
+    var mt = match.matchType;
+    var len = match.cards.length;
+    return matchTypeScoreBase[mt] + len * matchTypeScoreLengthBonus[mt];
+  }
+
+  var score = 0;
+  var getScore = this.getScore = function() {
+    return score;
+  };
+
   var remember = this.remember = function(match) {
-    memory.push(sanitizeMatch(match));
+    var san = sanitizeMatch(match);
+    memory.push(san);
+    score += scoreMatch(san);
     render();
   };
+
 };
 
 
@@ -1284,8 +1311,9 @@ PM.PreselectedMatcher = function() {
 };
 
 
-PM.Renderer = PM.Renderer || function(game, getSelectedCards) {
+PM.Renderer = PM.Renderer || function(game, history, getSelectedCards) {
   var graphics;
+  var scoreText;
  
   function initGraphics(){
     if(graphics) {
@@ -1298,13 +1326,30 @@ PM.Renderer = PM.Renderer || function(game, getSelectedCards) {
     cardLine.addChild(graphics);
   }
 
+  function initText() {
+    if(scoreText) return;
+
+    var style = { 
+      font: "20px Arial", 
+      fill: "#FF0000", 
+      align: "center" 
+    };
+    scoreText = game.add.text(0, 0, "0", style);
+    scoreText.anchor.setTo(1, 0);
+    scoreText.x = game.world.width;
+  }
+
+  function init() {
+    initGraphics();
+    initText();
+  }
+
   function cardCenter(card) {
     return new Phaser.Point(card.x + card.width / 2, card.y + card.height / 2);
   }
 
   var lastCardsDrawn = null;
   function drawLine(cards) {
-    initGraphics();
 
     graphics.clear();
 
@@ -1342,7 +1387,9 @@ PM.Renderer = PM.Renderer || function(game, getSelectedCards) {
   }
 
   var render = this.render = _.bind(function() {
+    init();
     drawLine(getSelectedCards());
+    scoreText.text = "Score: " + history.getScore().toString();
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');

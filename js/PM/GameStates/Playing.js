@@ -9,7 +9,8 @@ PM.GameStates.Playing = function(gameBoard) {
     cardSwapper.tryMatches(cards);
   });
   var cardFactory = new PM.CardFactory(gb, cardSelector);
-  var renderer = new PM.Renderer(game, function() {
+  var history = new PM.History();
+  var renderer = new PM.Renderer(game, history, function() {
     return cardSelector.getSelected();
   });
   var cardSwapper = new PM.CardSwapper({
@@ -18,7 +19,6 @@ PM.GameStates.Playing = function(gameBoard) {
     cardFactory: cardFactory
   });
 
-  var history = new PM.History();
 
   cardSwapper.signalCardGroupDropped.add(function(cards) {
     console.log('CARDS DROPPED');
