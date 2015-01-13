@@ -1,7 +1,6 @@
 PM.GameStates.Playing = function(gb) {
   var game = gb.game;
-  var level = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level.addObjective(new PM.Objectives.Score(2000));
+  var levelMgr = new PM.LevelManager(gb);
 
   // gamestate functions
   var preload = this.preload = function() {
@@ -9,10 +8,10 @@ PM.GameStates.Playing = function(gb) {
   };
   var create = this.create = function() {
     // do any initial animations
-    level.start();
+    levelMgr.getCurrentLevel().start();
   };
   var renderer = new PM.Renderer(game);
   var render = this.render = function() {
-    renderer.render(level);
+    renderer.render(levelMgr.getCurrentLevel());
   };
 };

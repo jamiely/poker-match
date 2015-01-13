@@ -806,8 +806,7 @@ PM.GameStates.MainMenu = function(game) {
 
 PM.GameStates.Playing = function(gb) {
   var game = gb.game;
-  var level = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level.addObjective(new PM.Objectives.Score(2000));
+  var levelMgr = new PM.LevelManager(gb);
 
   // gamestate functions
   var preload = this.preload = function() {
@@ -815,11 +814,11 @@ PM.GameStates.Playing = function(gb) {
   };
   var create = this.create = function() {
     // do any initial animations
-    level.start();
+    levelMgr.getCurrentLevel().start();
   };
   var renderer = new PM.Renderer(game);
   var render = this.render = function() {
-    renderer.render(level);
+    renderer.render(levelMgr.getCurrentLevel());
   };
 };
 
@@ -1014,6 +1013,28 @@ PM.Level = function(gameBoard, levelConfig) {
     objectives.push(objective);
   };
 };
+
+// controls level
+PM.LevelManager = function(gb) {
+  var level1 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+  level1.addObjective(new PM.Objectives.Score(10000));
+
+  var level2 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+  level2.addObjective(new PM.Objectives.Score(25000));
+
+  var level3 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+  level3.addObjective(new PM.Objectives.Score(50000));
+
+  // how should we progress the level? there should probably be some
+  // signal that we listen for.
+
+  var currentLevel = level1;
+
+  this.getCurrentLevel = function() {
+    return currentLevel;
+  };
+};
+
 
 PM.MatchReconciler = PM.MatchReconciler || function() {
 
@@ -1313,6 +1334,7 @@ PM.Matcher = PM.Matcher || function(board, config) {
 PM.Objectives = {};
 
 
+// Just used for testing.
 PM.Objectives.Impossible = function() {
   var isMet = this.isMet = function() {
     return false;
