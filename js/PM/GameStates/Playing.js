@@ -1,6 +1,7 @@
 PM.GameStates.Playing = function(gb) {
   var game = gb.game;
   var level = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+  level.addObjective(new PM.Objectives.Score(2000));
 
   // gamestate functions
   var preload = this.preload = function() {

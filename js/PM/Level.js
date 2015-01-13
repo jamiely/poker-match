@@ -11,6 +11,7 @@ PM.Level = function(gameBoard, levelConfig) {
   var history = new PM.History();
   var matcherB = new PM.PreselectedMatcher();
   var cardSwapper;
+  var self = this;
 
   function init() {
     board = newBoard();
@@ -29,9 +30,18 @@ PM.Level = function(gameBoard, levelConfig) {
     });
     cardSwapper.signalMatchFound.add(function(match) {
       history.remember(match);
+      console.log({
+        what: 'objective met',
+        met: isObjectiveMet(),
+        stats: history.getStatistics()
+      });
     });
     spawnBoard(board);
   }
+
+  this.getHistory = function() {
+    return history;
+  };
 
   // fill the screen with as many cards as possible
   function spawnBoard() {
@@ -47,8 +57,11 @@ PM.Level = function(gameBoard, levelConfig) {
   var start = this.start = function(callback) {
     init();
   };
+  var objectives = [];
   var isObjectiveMet = this.isObjectiveMet = function() {
-    return false; // by default
+    return _.every(objectives, function(obj) {
+      return obj.isMet(self);
+    });
   };
   // This is used to clean-up the level and show any animations
   // that need to be shown
@@ -61,5 +74,13 @@ PM.Level = function(gameBoard, levelConfig) {
 
   var getSelectedCards = this.getSelectedCards = function() {
     return cardSelector.getSelected();
+  };
+
+  var setObjective = this.setObjective = function(objectiveFunc) {
+    isObjectiveMet = self.isObjectiveMet = objectiveFunc;
+  };
+
+  var addObjective = this.addObjective = function(objective) {
+    objectives.push(objective);
   };
 };

@@ -807,6 +807,7 @@ PM.GameStates.MainMenu = function(game) {
 PM.GameStates.Playing = function(gb) {
   var game = gb.game;
   var level = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+  level.addObjective(new PM.Objectives.Score(2000));
 
   // gamestate functions
   var preload = this.preload = function() {
@@ -824,6 +825,11 @@ PM.GameStates.Playing = function(gb) {
 
 // keeps track of play history
 PM.History = PM.History || function() {
+  var countsByType = {};
+  var countsByValue = {};
+  var countsBySuit = {};
+  var countsByCard = {};
+
   var memory = [];
   var unicodeSuits = {
     hearts: '♥',
@@ -832,10 +838,14 @@ PM.History = PM.History || function() {
     diamonds: '♦'
   };
 
+  function displayCardSimple(card) {
+    return card.jalCardValue.value + 
+      unicodeSuits[card.jalCardValue.suit];
+  }
+
   function displayCard(card) {
     return '<span class="' + card.jalCardValue.suit + '">' +
-      card.jalCardValue.value + 
-      unicodeSuits[card.jalCardValue.suit] +
+      displayCardSimple(card) +
       '</span>';
   }
 
@@ -843,7 +853,8 @@ PM.History = PM.History || function() {
     return {
       jalCardValue: card.jalCardValue,
       jalBoardCoordinates: card.jalBoardCoordinates,
-      display: displayCard(card)
+      display: displayCard(card),
+      displaySimple: displayCardSimple(card)
     };
   }
 
@@ -886,8 +897,29 @@ PM.History = PM.History || function() {
     return score;
   };
 
+  this.getStatistics = function() {
+    return {
+      countsByType: countsByType,
+      countsByCard: countsByCard,
+      countsBySuit: countsBySuit,
+      countsByValue: countsByValue,
+      score: score
+    };
+  };
+
+  function track(match) {
+    countsByType[match.matchType] = (countsByType[match.matchType] || 0) + 1;
+    _.each(match.cards, function(c) {
+      countsByCard[c.displaySimple] = (countsByCard[c.displaySimple] || 0) + 1;
+      var cv = c.jalCardValue;
+      countsBySuit[cv.suit] = (countsBySuit[cv.suit] || 0) + 1;
+      countsByValue[cv.value] = (countsByValue[cv.value] || 0) + 1;
+    });
+  }
+
   var remember = this.remember = function(match) {
     var san = sanitizeMatch(match);
+    track(san);
     memory.push(san);
     score += scoreMatch(san);
     render();
@@ -909,6 +941,7 @@ PM.Level = function(gameBoard, levelConfig) {
   var history = new PM.History();
   var matcherB = new PM.PreselectedMatcher();
   var cardSwapper;
+  var self = this;
 
   function init() {
     board = newBoard();
@@ -927,9 +960,18 @@ PM.Level = function(gameBoard, levelConfig) {
     });
     cardSwapper.signalMatchFound.add(function(match) {
       history.remember(match);
+      console.log({
+        what: 'objective met',
+        met: isObjectiveMet(),
+        stats: history.getStatistics()
+      });
     });
     spawnBoard(board);
   }
+
+  this.getHistory = function() {
+    return history;
+  };
 
   // fill the screen with as many cards as possible
   function spawnBoard() {
@@ -945,8 +987,11 @@ PM.Level = function(gameBoard, levelConfig) {
   var start = this.start = function(callback) {
     init();
   };
+  var objectives = [];
   var isObjectiveMet = this.isObjectiveMet = function() {
-    return false; // by default
+    return _.every(objectives, function(obj) {
+      return obj.isMet(self);
+    });
   };
   // This is used to clean-up the level and show any animations
   // that need to be shown
@@ -959,6 +1004,14 @@ PM.Level = function(gameBoard, levelConfig) {
 
   var getSelectedCards = this.getSelectedCards = function() {
     return cardSelector.getSelected();
+  };
+
+  var setObjective = this.setObjective = function(objectiveFunc) {
+    isObjectiveMet = self.isObjectiveMet = objectiveFunc;
+  };
+
+  var addObjective = this.addObjective = function(objective) {
+    objectives.push(objective);
   };
 };
 
@@ -1255,6 +1308,23 @@ PM.Matcher = PM.Matcher || function(board, config) {
 
 };
 
+
+
+PM.Objectives = {};
+
+
+PM.Objectives.Impossible = function() {
+  var isMet = this.isMet = function() {
+    return false;
+  };
+};
+
+
+PM.Objectives.Score = function(targetScore) {
+  var isMet = this.isMet = function(level) {
+    return targetScore <= level.getScore();
+  };
+};
 
 
 PM.Preloader = PM.Preloader || function(game) {
