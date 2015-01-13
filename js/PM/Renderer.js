@@ -1,4 +1,4 @@
-PM.Renderer = PM.Renderer || function(game, history, getSelectedCards) {
+PM.Renderer = PM.Renderer || function(game) {
   var graphics;
   var scoreText;
  
@@ -73,10 +73,10 @@ PM.Renderer = PM.Renderer || function(game, history, getSelectedCards) {
     //graphics.endFill();
   }
 
-  var render = this.render = _.bind(function() {
+  var render = this.render = _.bind(function(level) {
     init();
-    drawLine(getSelectedCards());
-    scoreText.text = "Score: " + history.getScore().toString();
+    drawLine(level.getSelectedCards());
+    scoreText.text = "Score: " + level.getScore().toString();
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');

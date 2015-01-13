@@ -1,9 +1,9 @@
-PM.GameBoard = PM.GameBoard || function(config) {
+PM.GameBoard = PM.GameBoard || function(game, config) {
   this.config = config;
-  this.board = new PM.Board(config.boardSize);
-  this.game = new Phaser.Game(config.gameSize.x, 
-                              config.gameSize.y, 
-                              Phaser.CANVAS, 
-                              config.element);
+  this.game = game;
+  var newBoard = this.newBoard = function() {
+    return new PM.Board(config.boardSize);
+  };
+  this.board = newBoard();
 };
 

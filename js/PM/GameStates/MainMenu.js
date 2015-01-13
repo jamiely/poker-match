@@ -18,16 +18,9 @@ PM.GameStates.MainMenu = function(game) {
       'blue_button03.png',
       'blue_button03.png',
       'blue_button03.png');
-      //'blue_button04.png',
-      //'blue_button04.png',
-      //'blue_button03.png',
-      //'blue_button04.png');
     button.anchor.setTo(0.5, 0.5);
 
     button.addChild(text);
-    button.onInputUp.add(function() {
-      //text.anchor.setTo(0.5, 0.6);
-    }, this);
     return button;
   }
 

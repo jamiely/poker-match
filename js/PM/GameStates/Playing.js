@@ -1,49 +1,17 @@
-PM.GameStates.Playing = function(gameBoard) {
-  var gb = gameBoard;
+PM.GameStates.Playing = function(gb) {
   var game = gb.game;
-  var board = gb.board;
-  //var matcher = new PM.Matcher(board);
-  var matcherB = new PM.PreselectedMatcher();
-  var cardSelector = new PM.CardSelectorDrag(board, function(cards) {
-    console.log(cards);
-    cardSwapper.tryMatches(cards);
-  });
-  var cardFactory = new PM.CardFactory(gb, cardSelector);
-  var history = new PM.History();
-  var renderer = new PM.Renderer(game, history, function() {
-    return cardSelector.getSelected();
-  });
-  var cardSwapper = new PM.CardSwapper({
-    gameBoard: gb,
-    matcher: matcherB,
-    cardFactory: cardFactory
-  });
-
-
-  cardSwapper.signalCardGroupDropped.add(function(cards) {
-    console.log('CARDS DROPPED');
-    console.log(cards);
-    //history.remember(cards);
-  });
-  cardSwapper.signalMatchFound.add(function(match) {
-    history.remember(match);
-  });
-
-  // fill the screen with as many cards as possible
-  function spawnBoard() {
-    gb.board.saveCards(cardFactory.createInitialCards());
-  }
+  var level = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
 
   // gamestate functions
   var preload = this.preload = function() {
     new PM.Preloader(game).preload();
   };
-
   var create = this.create = function() {
-    spawnBoard();
+    // do any initial animations
+    level.start();
   };
-
+  var renderer = new PM.Renderer(game);
   var render = this.render = function() {
-    renderer.render();
+    renderer.render(level);
   };
 };
