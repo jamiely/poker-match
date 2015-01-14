@@ -3,7 +3,9 @@ PM.App = PM.App || function(config) {
                               config.gameSize.y, 
                               Phaser.CANVAS, 
                               config.element);
-  game.state.add('playing', new PM.GameStates.Playing(new PM.GameBoard(game, config)));
+  var gb = new PM.GameBoard(game, config);
+  game.state.add('score-attack', new PM.GameStates.ScoreAttack(gb));
+  game.state.add('playing', new PM.GameStates.Playing(gb));
   game.state.add('main-menu', new PM.GameStates.MainMenu(game));
 
   var run = this.run = function() {

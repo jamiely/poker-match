@@ -41,8 +41,8 @@ PM.GameStates.MainMenu = function(game) {
     };
 
     var buttons = [
-      //button('Endless', notImplemented),
-      button('Score Attack', gameStateChanger('playing')),
+      button('Endless', gameStateChanger('playing')),
+      button('Score Attack', gameStateChanger('score-attack')),
       //button('Challenges', notImplemented),
       //button('High Scores', notImplemented),
       button('Options', notImplemented)];

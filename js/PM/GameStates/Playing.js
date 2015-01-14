@@ -1,6 +1,9 @@
 PM.GameStates.Playing = function(gb) {
   var game = gb.game;
   var levelMgr = new PM.LevelManager(gb);
+  var endlessLevel = new PM.Level(gb, new PM.LevelConfig(gb.config));
+  endlessLevel.addObjective(new PM.Objectives.Impossible());
+  levelMgr.setLevels([endlessLevel]);
 
   // gamestate functions
   var preload = this.preload = function() {

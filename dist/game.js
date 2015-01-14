@@ -7,7 +7,9 @@ PM.App = PM.App || function(config) {
                               config.gameSize.y, 
                               Phaser.CANVAS, 
                               config.element);
-  game.state.add('playing', new PM.GameStates.Playing(new PM.GameBoard(game, config)));
+  var gb = new PM.GameBoard(game, config);
+  game.state.add('score-attack', new PM.GameStates.ScoreAttack(gb));
+  game.state.add('playing', new PM.GameStates.Playing(gb));
   game.state.add('main-menu', new PM.GameStates.MainMenu(game));
 
   var run = this.run = function() {
@@ -798,8 +800,8 @@ PM.GameStates.MainMenu = function(game) {
     };
 
     var buttons = [
-      //button('Endless', notImplemented),
-      button('Score Attack', gameStateChanger('playing')),
+      button('Endless', gameStateChanger('playing')),
+      button('Score Attack', gameStateChanger('score-attack')),
       //button('Challenges', notImplemented),
       //button('High Scores', notImplemented),
       button('Options', notImplemented)];
@@ -819,6 +821,9 @@ PM.GameStates.MainMenu = function(game) {
 PM.GameStates.Playing = function(gb) {
   var game = gb.game;
   var levelMgr = new PM.LevelManager(gb);
+  var endlessLevel = new PM.Level(gb, new PM.LevelConfig(gb.config));
+  endlessLevel.addObjective(new PM.Objectives.Impossible());
+  levelMgr.setLevels([endlessLevel]);
 
   // gamestate functions
   var preload = this.preload = function() {
@@ -833,6 +838,36 @@ PM.GameStates.Playing = function(gb) {
     renderer.render(levelMgr.getCurrentLevel());
   };
 };
+
+PM.GameStates.ScoreAttack = function(gb) {
+  var game = gb.game;
+
+  var level1 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+  level1.addObjective(new PM.Objectives.Score(10000));
+
+  var level2 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+  level2.addObjective(new PM.Objectives.Score(25000));
+
+  var level3 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+  level3.addObjective(new PM.Objectives.Score(50000));
+
+  var levelMgr = new PM.LevelManager(gb);
+  levelMgr.setLevels([level1, level2, level3]);
+
+  // gamestate functions
+  var preload = this.preload = function() {
+    new PM.Preloader(game).preload();
+  };
+  var create = this.create = function() {
+    // do any initial animations
+    levelMgr.start();
+  };
+  var renderer = new PM.Renderer(game);
+  var render = this.render = function() {
+    renderer.render(levelMgr.getCurrentLevel());
+  };
+};
+
 
 // keeps track of play history
 PM.History = PM.History || function() {
@@ -914,7 +949,9 @@ PM.History = PM.History || function() {
       countsByCard: countsByCard,
       countsBySuit: countsBySuit,
       countsByValue: countsByValue,
-      score: score
+      score: score,
+      // same as matches
+      moves: memory.length
     };
   };
 
@@ -1081,21 +1118,9 @@ PM.Level = function(gameBoard, levelConfig) {
 
 // controls level
 PM.LevelManager = function(gb) {
-  var level1 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level1.addObjective(new PM.Objectives.Score(1000));
-
-  var level2 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level2.addObjective(new PM.Objectives.Score(2500));
-
-  var level3 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level3.addObjective(new PM.Objectives.Score(5000));
-
-  // how should we progress the level? there should probably be some
-  // signal that we listen for.
-
   var currentLevelIndex = -1;
   var currentLevel = null;
-  var levels = [level1, level2, level3];
+  var levels = [];
 
   function nextLevel() {
     currentLevelIndex ++;
@@ -1124,6 +1149,10 @@ PM.LevelManager = function(gb) {
 
   this.getCurrentLevel = function() {
     return currentLevel;
+  };
+
+  this.setLevels = function(lvls) {
+    levels = lvls;
   };
 };
 
@@ -1431,6 +1460,10 @@ PM.Objectives.Impossible = function() {
   var isMet = this.isMet = function() {
     return false;
   };
+
+  this.getDescription = function() {
+    return "Endless.";
+  };
 };
 
 
@@ -1551,7 +1584,7 @@ PM.Renderer = PM.Renderer || function(game) {
     var style = { 
       font: "20px Arial", 
       fill: "#FF0000", 
-      align: "center" 
+      align: "left" 
     };
     scoreText = game.add.text(0, 0, "0", style);
     scoreText.anchor.setTo(1, 0);
@@ -1616,7 +1649,7 @@ PM.Renderer = PM.Renderer || function(game) {
     init();
     drawLine(level.getSelectedCards());
     scoreText.text = "Score: " + level.getScore().toString();
-    objectivesText.text = level.getObjectivesDescription();
+    objectivesText.text = "Objectives\n" + level.getObjectivesDescription();
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');

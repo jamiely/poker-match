@@ -78,7 +78,9 @@ PM.History = PM.History || function() {
       countsByCard: countsByCard,
       countsBySuit: countsBySuit,
       countsByValue: countsByValue,
-      score: score
+      score: score,
+      // same as matches
+      moves: memory.length
     };
   };
 

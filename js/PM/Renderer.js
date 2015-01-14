@@ -21,7 +21,7 @@ PM.Renderer = PM.Renderer || function(game) {
     var style = { 
       font: "20px Arial", 
       fill: "#FF0000", 
-      align: "center" 
+      align: "left" 
     };
     scoreText = game.add.text(0, 0, "0", style);
     scoreText.anchor.setTo(1, 0);
@@ -86,7 +86,7 @@ PM.Renderer = PM.Renderer || function(game) {
     init();
     drawLine(level.getSelectedCards());
     scoreText.text = "Score: " + level.getScore().toString();
-    objectivesText.text = level.getObjectivesDescription();
+    objectivesText.text = "Objectives\n" + level.getObjectivesDescription();
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');
