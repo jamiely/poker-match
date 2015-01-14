@@ -23,6 +23,10 @@ PM.Board = PM.Board || function(boardSize) {
     BOARD = {};
   };
 
+  var getCards = this.getCards = function() {
+    return _.values(BOARD);
+  };
+
   var saveCards = this.saveCards = function(cards) {
     reset(); // this init needs to happen before cards are created.
     _.each(cards, saveBoardCoords);
@@ -377,6 +381,11 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
   var killCard = args.cardFactory.killCard;
   var createCard = args.cardFactory.createCard;
   var debug = false;
+  var shouldContinue = true;
+
+  var stop = this.stop = function() {
+    shouldContinue = false;
+  };
 
   function log(what) {
     if(! debug) return;
@@ -589,6 +598,8 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
 
   // drop the column from the passed starting point
   function dropColumnFromPt(pt, complete, newCardCreated) {
+    if(!shouldContinue) return;
+
     complete = complete || function(){};
 
     log({
@@ -787,9 +798,10 @@ PM.GameStates.MainMenu = function(game) {
     };
 
     var buttons = [
+      //button('Endless', notImplemented),
       button('Score Attack', gameStateChanger('playing')),
-      button('Challenges', notImplemented),
-      button('High Scores', notImplemented),
+      //button('Challenges', notImplemented),
+      //button('High Scores', notImplemented),
       button('Options', notImplemented)];
 
     var yPadding = 10;
@@ -814,7 +826,7 @@ PM.GameStates.Playing = function(gb) {
   };
   var create = this.create = function() {
     // do any initial animations
-    levelMgr.getCurrentLevel().start();
+    levelMgr.start();
   };
   var renderer = new PM.Renderer(game);
   var render = this.render = function() {
@@ -936,11 +948,16 @@ PM.Level = function(gameBoard, levelConfig) {
   var board;
   var cardSelector;
   var gb = gameBoard;
+  var game = gb.game;
   var cardFactory;
   var history = new PM.History();
   var matcherB = new PM.PreselectedMatcher();
   var cardSwapper;
   var self = this;
+  var signals = {
+    objectiveCompleted: new Phaser.Signal(),
+    levelCompleted: new Phaser.Signal()
+  };
 
   function init() {
     board = newBoard();
@@ -964,9 +981,20 @@ PM.Level = function(gameBoard, levelConfig) {
         met: isObjectiveMet(),
         stats: history.getStatistics()
       });
+
+      if(isObjectiveMet()) {
+        signals.objectiveCompleted.dispatch(history);
+        showObjectivesMetAnimation(function() {
+          signals.levelCompleted.dispatch();
+        });
+      }
     });
     spawnBoard(board);
   }
+
+  this.getSignals = function() {
+    return signals;
+  };
 
   this.getHistory = function() {
     return history;
@@ -979,6 +1007,37 @@ PM.Level = function(gameBoard, levelConfig) {
 
   function newBoard() {
     return new PM.Board(levelConfig.boardSize);
+  }
+
+  function showObjectivesMetAnimation(callback) {
+    cardSwapper.stop();
+
+    var style = { 
+      font: "40px Arial", 
+      fill: "#0000FF", 
+      align: "center" 
+    };
+    var completedText = game.add.text(game.world.width/2, -100, "Objective Completed!", style);
+    completedText.anchor.setTo(0.5, 0.5);
+    var tween = game.add.tween(completedText).to({
+        y: game.world.height/2
+      }, 1000, Phaser.Easing.Bounce.In).to({
+        y: game.world.height + 100
+      }, 2000, Phaser.Easing.Power2, true, 2000);
+    // wait a bit for this
+    setTimeout(function() {
+      _.each(board.getCards(), function(c) {
+        var t = game.add.tween(c).to({ y: -100 }, 500 + 500 * Math.random(), Phaser.Easing.Power2);
+        t.onComplete.add(function() {
+          c.kill();
+        });
+        t.start();
+      });
+    }, 500);
+    tween.onComplete.add(function() {
+      callback();
+    });
+    tween.delay(2000).start();
   }
 
   // Performs any initial setup and starts animations that signal
@@ -1012,23 +1071,56 @@ PM.Level = function(gameBoard, levelConfig) {
   var addObjective = this.addObjective = function(objective) {
     objectives.push(objective);
   };
+
+  this.getObjectivesDescription = function() {
+    return _.map(objectives, function(obj) {
+      return obj.getDescription();
+    }).join('\n');
+  };
 };
 
 // controls level
 PM.LevelManager = function(gb) {
   var level1 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level1.addObjective(new PM.Objectives.Score(10000));
+  level1.addObjective(new PM.Objectives.Score(1000));
 
   var level2 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level2.addObjective(new PM.Objectives.Score(25000));
+  level2.addObjective(new PM.Objectives.Score(2500));
 
   var level3 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level3.addObjective(new PM.Objectives.Score(50000));
+  level3.addObjective(new PM.Objectives.Score(5000));
 
   // how should we progress the level? there should probably be some
   // signal that we listen for.
 
-  var currentLevel = level1;
+  var currentLevelIndex = -1;
+  var currentLevel = null;
+  var levels = [level1, level2, level3];
+
+  function nextLevel() {
+    currentLevelIndex ++;
+    currentLevel = levels[currentLevelIndex];
+    if(! currentLevel) {
+      return null;
+    }
+    currentLevel.getSignals().levelCompleted.addOnce(function() {
+      console.log('moving to next level');
+      nextLevel();
+    });
+    currentLevel.start();
+    return currentLevel;
+  }
+
+  this.start = function() {
+    var level = nextLevel();
+    if(level) {
+      // do something?
+    }
+    else {
+      console.log('game over');
+      // TODO
+    }
+  };
 
   this.getCurrentLevel = function() {
     return currentLevel;
@@ -1346,6 +1438,10 @@ PM.Objectives.Score = function(targetScore) {
   var isMet = this.isMet = function(level) {
     return targetScore <= level.getScore();
   };
+
+  this.getDescription = function() {
+    return "Score at least " + targetScore + " points."
+  };
 };
 
 
@@ -1435,10 +1531,12 @@ PM.PreselectedMatcher = function() {
 PM.Renderer = PM.Renderer || function(game) {
   var graphics;
   var scoreText;
+  var objectivesText;
  
   function initGraphics(){
     if(graphics) {
-      game.world.bringToTop(graphics);
+      game.world.bringToTop(graphics); // this doesn't seem to do anything.
+      graphics.parent.bringToTop(graphics);
       return;
     }
     graphics = game.add.graphics();
@@ -1458,6 +1556,13 @@ PM.Renderer = PM.Renderer || function(game) {
     scoreText = game.add.text(0, 0, "0", style);
     scoreText.anchor.setTo(1, 0);
     scoreText.x = game.world.width;
+
+    var objectivesStyle = _.extend({}, style, {
+      font: '12px Arial'
+    });
+    objectivesText = game.add.text(0, 100, "0", objectivesStyle);
+    objectivesText.anchor.setTo(1, 0);
+    objectivesText.x = game.world.width;
   }
 
   function init() {
@@ -1511,6 +1616,7 @@ PM.Renderer = PM.Renderer || function(game) {
     init();
     drawLine(level.getSelectedCards());
     scoreText.text = "Score: " + level.getScore().toString();
+    objectivesText.text = level.getObjectivesDescription();
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');

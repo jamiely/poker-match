@@ -5,6 +5,10 @@ PM.Board = PM.Board || function(boardSize) {
     BOARD = {};
   };
 
+  var getCards = this.getCards = function() {
+    return _.values(BOARD);
+  };
+
   var saveCards = this.saveCards = function(cards) {
     reset(); // this init needs to happen before cards are created.
     _.each(cards, saveBoardCoords);

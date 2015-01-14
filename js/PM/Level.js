@@ -7,11 +7,16 @@ PM.Level = function(gameBoard, levelConfig) {
   var board;
   var cardSelector;
   var gb = gameBoard;
+  var game = gb.game;
   var cardFactory;
   var history = new PM.History();
   var matcherB = new PM.PreselectedMatcher();
   var cardSwapper;
   var self = this;
+  var signals = {
+    objectiveCompleted: new Phaser.Signal(),
+    levelCompleted: new Phaser.Signal()
+  };
 
   function init() {
     board = newBoard();
@@ -35,9 +40,20 @@ PM.Level = function(gameBoard, levelConfig) {
         met: isObjectiveMet(),
         stats: history.getStatistics()
       });
+
+      if(isObjectiveMet()) {
+        signals.objectiveCompleted.dispatch(history);
+        showObjectivesMetAnimation(function() {
+          signals.levelCompleted.dispatch();
+        });
+      }
     });
     spawnBoard(board);
   }
+
+  this.getSignals = function() {
+    return signals;
+  };
 
   this.getHistory = function() {
     return history;
@@ -50,6 +66,37 @@ PM.Level = function(gameBoard, levelConfig) {
 
   function newBoard() {
     return new PM.Board(levelConfig.boardSize);
+  }
+
+  function showObjectivesMetAnimation(callback) {
+    cardSwapper.stop();
+
+    var style = { 
+      font: "40px Arial", 
+      fill: "#0000FF", 
+      align: "center" 
+    };
+    var completedText = game.add.text(game.world.width/2, -100, "Objective Completed!", style);
+    completedText.anchor.setTo(0.5, 0.5);
+    var tween = game.add.tween(completedText).to({
+        y: game.world.height/2
+      }, 1000, Phaser.Easing.Bounce.In).to({
+        y: game.world.height + 100
+      }, 2000, Phaser.Easing.Power2, true, 2000);
+    // wait a bit for this
+    setTimeout(function() {
+      _.each(board.getCards(), function(c) {
+        var t = game.add.tween(c).to({ y: -100 }, 500 + 500 * Math.random(), Phaser.Easing.Power2);
+        t.onComplete.add(function() {
+          c.kill();
+        });
+        t.start();
+      });
+    }, 500);
+    tween.onComplete.add(function() {
+      callback();
+    });
+    tween.delay(2000).start();
   }
 
   // Performs any initial setup and starts animations that signal
@@ -82,5 +129,11 @@ PM.Level = function(gameBoard, levelConfig) {
 
   var addObjective = this.addObjective = function(objective) {
     objectives.push(objective);
+  };
+
+  this.getObjectivesDescription = function() {
+    return _.map(objectives, function(obj) {
+      return obj.getDescription();
+    }).join('\n');
   };
 };

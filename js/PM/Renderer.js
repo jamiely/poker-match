@@ -1,10 +1,12 @@
 PM.Renderer = PM.Renderer || function(game) {
   var graphics;
   var scoreText;
+  var objectivesText;
  
   function initGraphics(){
     if(graphics) {
-      game.world.bringToTop(graphics);
+      game.world.bringToTop(graphics); // this doesn't seem to do anything.
+      graphics.parent.bringToTop(graphics);
       return;
     }
     graphics = game.add.graphics();
@@ -24,6 +26,13 @@ PM.Renderer = PM.Renderer || function(game) {
     scoreText = game.add.text(0, 0, "0", style);
     scoreText.anchor.setTo(1, 0);
     scoreText.x = game.world.width;
+
+    var objectivesStyle = _.extend({}, style, {
+      font: '12px Arial'
+    });
+    objectivesText = game.add.text(0, 100, "0", objectivesStyle);
+    objectivesText.anchor.setTo(1, 0);
+    objectivesText.x = game.world.width;
   }
 
   function init() {
@@ -77,6 +86,7 @@ PM.Renderer = PM.Renderer || function(game) {
     init();
     drawLine(level.getSelectedCards());
     scoreText.text = "Score: " + level.getScore().toString();
+    objectivesText.text = level.getObjectivesDescription();
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');

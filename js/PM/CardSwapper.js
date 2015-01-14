@@ -7,6 +7,11 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
   var killCard = args.cardFactory.killCard;
   var createCard = args.cardFactory.createCard;
   var debug = false;
+  var shouldContinue = true;
+
+  var stop = this.stop = function() {
+    shouldContinue = false;
+  };
 
   function log(what) {
     if(! debug) return;
@@ -219,6 +224,8 @@ PM.CardSwapper = PM.CardSwapper || function(args) {
 
   // drop the column from the passed starting point
   function dropColumnFromPt(pt, complete, newCardCreated) {
+    if(!shouldContinue) return;
+
     complete = complete || function(){};
 
     log({

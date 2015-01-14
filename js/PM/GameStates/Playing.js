@@ -8,7 +8,7 @@ PM.GameStates.Playing = function(gb) {
   };
   var create = this.create = function() {
     // do any initial animations
-    levelMgr.getCurrentLevel().start();
+    levelMgr.start();
   };
   var renderer = new PM.Renderer(game);
   var render = this.render = function() {

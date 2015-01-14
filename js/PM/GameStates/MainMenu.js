@@ -41,9 +41,10 @@ PM.GameStates.MainMenu = function(game) {
     };
 
     var buttons = [
+      //button('Endless', notImplemented),
       button('Score Attack', gameStateChanger('playing')),
-      button('Challenges', notImplemented),
-      button('High Scores', notImplemented),
+      //button('Challenges', notImplemented),
+      //button('High Scores', notImplemented),
       button('Options', notImplemented)];
 
     var yPadding = 10;
