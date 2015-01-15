@@ -1,3 +1,9 @@
+v2.1.0
+======
+
+* Added levels and game modes
+* BUG: Cannot return to game mode
+
 v2.0.0
 ======
 

@@ -135,6 +135,46 @@ PM.BoardParser = PM.BoardParser || function() {
 };
 
 
+PM.ButtonFactory = function(game) {
+  var uiAtlasName = 'ui';
+
+  this.preload = function() {
+    game.load.atlasXML(
+      uiAtlasName, 
+      'assets/sprites/blueSheet.png', 
+      'assets/sprites/blueSheet.xml');
+  };
+
+  var newButton = this.newButton = function (strText, clickHandler) {
+    var group = game.add.group();
+
+    var style = { 
+      font: "20px Arial", 
+      fill: "#EEEEEE", 
+      align: "center" 
+    };
+    var text = game.add.text(100, 100, strText, style);
+    text.anchor.setTo(0.5, 0.5);
+    var button = game.add.button(
+      100, 
+      100, 
+      uiAtlasName, 
+      clickHandler, 
+      this,
+      'blue_button03.png',
+      'blue_button03.png',
+      'blue_button03.png',
+      'blue_button03.png');
+    button.anchor.setTo(0.5, 0.5);
+
+    group.addChild(button);
+    group.addChild(text);
+
+    return group;
+  }
+};
+
+
 PM.CardFactory = PM.CardFactory || function(gameBoard, cardSelector) {
   var game = gameBoard.game;
   var board = gameBoard.board;
@@ -758,36 +798,11 @@ PM.GameStates = {};
 
 
 PM.GameStates.MainMenu = function(game) {
-  var uiAtlasName = 'ui';
-  function button(strText, clickHandler) {
-    var style = { 
-      font: "20px Arial", 
-      fill: "#EEEEEE", 
-      align: "center" 
-    };
-    var text = game.add.text(0, 0, strText, style);
-    text.anchor.setTo(0.5, 0.5);
-    var button = game.add.button(
-      100, 
-      100, 
-      uiAtlasName, 
-      clickHandler, 
-      this,
-      'blue_button03.png',
-      'blue_button03.png',
-      'blue_button03.png',
-      'blue_button03.png');
-    button.anchor.setTo(0.5, 0.5);
-
-    button.addChild(text);
-    return button;
-  }
+  var buttonFactory = new PM.ButtonFactory(game);
+  var button = buttonFactory.newButton;
 
   var preload = this.preload = function() {
-    game.load.atlasXML(
-      uiAtlasName, 
-      'assets/sprites/blueSheet.png', 
-      'assets/sprites/blueSheet.xml');
+    buttonFactory.preload();
   };
   var create = this.create = function() {
     var gameStateChanger = function(stateName) {
@@ -808,9 +823,9 @@ PM.GameStates.MainMenu = function(game) {
 
     var yPadding = 10;
     // place near bottom of screen.
-    var yPos = game.world.height - 3 * buttons[0].height;
+    var yPos = game.world.height - 4 * buttons[0].height;
     _.each(_.clone(buttons).reverse(), function(b) {
-      b.x = game.world.centerX;
+      b.x = game.world.centerX - b.width / 2;
       b.y = yPos;
       yPos -= b.height + yPadding;
     });
@@ -1565,6 +1580,8 @@ PM.Renderer = PM.Renderer || function(game) {
   var graphics;
   var scoreText;
   var objectivesText;
+  var quitButton;
+  var buttonFactory = new PM.ButtonFactory(game);
  
   function initGraphics(){
     if(graphics) {
@@ -1576,6 +1593,24 @@ PM.Renderer = PM.Renderer || function(game) {
     graphics.boundsPadding = 0;
     var cardLine = game.add.sprite(0, 0, null);
     cardLine.addChild(graphics);
+
+    quitButton = buttonFactory.newButton("Quit", function() {
+      game.state.start('main-menu');
+    });
+    quitButton.x = game.world.width - quitButton.width;
+    // TODO: why is this times 3?
+    quitButton.y = game.world.height - quitButton.height * 3;
+    //quitButton.x = 600;
+    //quitButton.y = 400;
+    console.log({
+      what: 'quitButton',
+      x: quitButton.x,
+      y: quitButton.y,
+      width: quitButton.width,
+      height: quitButton.height
+    });
+    //quitButton.x = 100;
+    //quitButton.y = 100;
   }
 
   function initText() {

@@ -2,6 +2,8 @@ PM.Renderer = PM.Renderer || function(game) {
   var graphics;
   var scoreText;
   var objectivesText;
+  var quitButton;
+  var buttonFactory = new PM.ButtonFactory(game);
  
   function initGraphics(){
     if(graphics) {
@@ -13,6 +15,24 @@ PM.Renderer = PM.Renderer || function(game) {
     graphics.boundsPadding = 0;
     var cardLine = game.add.sprite(0, 0, null);
     cardLine.addChild(graphics);
+
+    quitButton = buttonFactory.newButton("Quit", function() {
+      game.state.start('main-menu');
+    });
+    quitButton.x = game.world.width - quitButton.width;
+    // TODO: why is this times 3?
+    quitButton.y = game.world.height - quitButton.height * 3;
+    //quitButton.x = 600;
+    //quitButton.y = 400;
+    console.log({
+      what: 'quitButton',
+      x: quitButton.x,
+      y: quitButton.y,
+      width: quitButton.width,
+      height: quitButton.height
+    });
+    //quitButton.x = 100;
+    //quitButton.y = 100;
   }
 
   function initText() {
