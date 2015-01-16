@@ -27,12 +27,14 @@
 <ul>
   <li>Card images courtesy www.kenney.nl (http://opengameart.org/content/boardgame-pack)</li>
 </ul>
-<!-- bower:js -->
-<script src="bower_components/jquery/dist/jquery.js"></script>
-<script src="bower_components/phaser/build/phaser.js"></script>
-<script src="bower_components/underscore/underscore.js"></script>
-<!-- endbower -->
-<script src="dist/game.js"></script>
+<!-- build:js dist/game.js -->
+  <!-- bower:js -->
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script src="bower_components/phaser/build/phaser.js"></script>
+  <script src="bower_components/underscore/underscore.js"></script>
+  <!-- endbower -->
+  <script src="dist/game.js"></script>
+<!-- endbuild -->
 <script>
   var app = new PM.App(new PM.Configuration());
   app.run();

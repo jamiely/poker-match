@@ -4,6 +4,8 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-open');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-bower-install');
+  grunt.loadNpmTasks('grunt-usemin');
+  grunt.loadNpmTasks('grunt-filerev');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -43,13 +45,60 @@ module.exports = function (grunt) {
         path: 'http://localhost:8080/index.html'
       }
     },
+    filerev: {
+      options: {
+        algorithm: 'md5',
+        length: 8
+      },
+      js: {
+        src: 'dist/**/*.js'
+      }
+    },
+    useminPrepare: {
+      html: 'index.html',
+      options: {
+        flow: {
+          html: {
+            steps: {
+              js: ['concat']
+            },
+            post: {}
+          }
+        }
+      }
+    },
+    usemin: {
+      html: 'dist/index.html',
+      options: {
+        assetsDirs: ['dist']
+      }
+    },
     concat: {
       dist: {
-        src: 'js/**/*.js',
-        dest: 'dist/game.js'
+        files: [
+          {
+            src: [
+              "bower_components/jquery/dist/jquery.js",
+              "bower_components/phaser/build/phaser.js",
+              "bower_components/underscore/underscore.js",
+              'js/**/*.js'
+            ],
+            dest: 'dist/game.js'
+          }
+        ]
       }
     }
   });
+
+  // simple build task
+  grunt.registerTask('build', 
+                     [
+                       'concat:dist',
+                       'useminPrepare',
+                       'concat:generated',
+                       'filerev',
+                       'usemin'
+                     ]);
 
   grunt.registerTask('default', ['connect', 'open', 'watch']);
 }
