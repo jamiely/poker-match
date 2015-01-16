@@ -6,6 +6,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-bower-install');
   grunt.loadNpmTasks('grunt-usemin');
   grunt.loadNpmTasks('grunt-filerev');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -36,9 +37,15 @@ module.exports = function (grunt) {
         }
       }
     },
+    copy: {
+      dist: {
+        src: 'index.html',
+        dest: 'dist/index.html'
+      }
+    },
     watch: {
       files: ['js/**/*.js', 'Gruntfile.js'],
-      tasks: ['concat']
+      tasks: ['concat:generated']
     },
     open: {
       dev: {
@@ -57,6 +64,7 @@ module.exports = function (grunt) {
     useminPrepare: {
       html: 'index.html',
       options: {
+        dest: 'dist',
         flow: {
           html: {
             steps: {
@@ -68,13 +76,10 @@ module.exports = function (grunt) {
       }
     },
     usemin: {
-      html: 'dist/index.html',
-      options: {
-        assetsDirs: ['dist']
-      }
+      html: 'dist/index.html'
     },
     concat: {
-      dist: {
+      generated: {
         files: [
           {
             src: [
@@ -93,13 +98,13 @@ module.exports = function (grunt) {
   // simple build task
   grunt.registerTask('build', 
                      [
-                       'concat:dist',
+                       'copy:dist',
                        'useminPrepare',
                        'concat:generated',
                        'filerev',
                        'usemin'
                      ]);
 
-  grunt.registerTask('default', ['connect', 'open', 'watch']);
+  grunt.registerTask('default', ['connect', 'open', 'concat:generated', 'watch']);
 }
 
