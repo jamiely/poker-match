@@ -5,6 +5,9 @@ PM.LevelManager = function(gb) {
   var levels = [];
 
   function nextLevel() {
+    if(currentLevel) {
+      currentLevel.destroy();
+    }
     currentLevelIndex ++;
     currentLevel = levels[currentLevelIndex];
     if(! currentLevel) {
@@ -35,6 +38,12 @@ PM.LevelManager = function(gb) {
 
   this.setLevels = function(lvls) {
     levels = lvls;
+  };
+
+  this.destroy = function() {
+    if(currentLevel) {
+      currentLevel.destroy();
+    }
   };
 };
 

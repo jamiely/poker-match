@@ -835,51 +835,66 @@ PM.GameStates.MainMenu = function(game) {
 
 PM.GameStates.Playing = function(gb) {
   var game = gb.game;
-  var levelMgr = new PM.LevelManager(gb);
-  var endlessLevel = new PM.Level(gb, new PM.LevelConfig(gb.config));
-  endlessLevel.addObjective(new PM.Objectives.Impossible());
-  levelMgr.setLevels([endlessLevel]);
+  var levelMgr, endlessLevel, renderer;
 
   // gamestate functions
   var preload = this.preload = function() {
     new PM.Preloader(game).preload();
   };
   var create = this.create = function() {
+    renderer = new PM.Renderer(game);
+    levelMgr = new PM.LevelManager(gb);
+    endlessLevel = new PM.Level(gb, new PM.LevelConfig(gb.config));
+    endlessLevel.addObjective(new PM.Objectives.Impossible());
+    levelMgr.setLevels([endlessLevel]);
     // do any initial animations
     levelMgr.start();
   };
-  var renderer = new PM.Renderer(game);
   var render = this.render = function() {
     renderer.render(levelMgr.getCurrentLevel());
+  };
+  this.shutdown = function() {
+    renderer.dispose();
+    renderer = null;
+    levelMgr.destroy();
   };
 };
 
 PM.GameStates.ScoreAttack = function(gb) {
   var game = gb.game;
 
-  var level1 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level1.addObjective(new PM.Objectives.Score(10000));
-
-  var level2 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level2.addObjective(new PM.Objectives.Score(25000));
-
-  var level3 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
-  level3.addObjective(new PM.Objectives.Score(50000));
-
-  var levelMgr = new PM.LevelManager(gb);
-  levelMgr.setLevels([level1, level2, level3]);
+  var level1, level2, level3, levelMgr, renderer;
 
   // gamestate functions
   var preload = this.preload = function() {
     new PM.Preloader(game).preload();
   };
   var create = this.create = function() {
+    renderer = new PM.Renderer(game);
+
+    level1 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+    level1.addObjective(new PM.Objectives.Score(10000));
+
+    level2 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+    level2.addObjective(new PM.Objectives.Score(25000));
+
+    level3 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
+    level3.addObjective(new PM.Objectives.Score(50000));
+
+    levelMgr = new PM.LevelManager(gb);
+    levelMgr.setLevels([level1, level2, level3]);
     // do any initial animations
     levelMgr.start();
   };
-  var renderer = new PM.Renderer(game);
+
   var render = this.render = function() {
     renderer.render(levelMgr.getCurrentLevel());
+  };
+
+  this.shutdown = function() {
+    renderer.dispose();
+    renderer = null;
+    levelMgr.destroy();
   };
 };
 
@@ -1129,6 +1144,10 @@ PM.Level = function(gameBoard, levelConfig) {
       return obj.getDescription();
     }).join('\n');
   };
+
+  this.destroy = function() {
+    _.invoke(board.getCards(), 'kill');
+  };
 };
 
 // controls level
@@ -1138,6 +1157,9 @@ PM.LevelManager = function(gb) {
   var levels = [];
 
   function nextLevel() {
+    if(currentLevel) {
+      currentLevel.destroy();
+    }
     currentLevelIndex ++;
     currentLevel = levels[currentLevelIndex];
     if(! currentLevel) {
@@ -1168,6 +1190,12 @@ PM.LevelManager = function(gb) {
 
   this.setLevels = function(lvls) {
     levels = lvls;
+  };
+
+  this.destroy = function() {
+    if(currentLevel) {
+      currentLevel.destroy();
+    }
   };
 };
 
@@ -1582,6 +1610,28 @@ PM.Renderer = PM.Renderer || function(game) {
   var objectivesText;
   var quitButton;
   var buttonFactory = new PM.ButtonFactory(game);
+
+  var dispose = this.dispose = function() {
+    if(graphics) {
+      graphics.destroy();
+      graphics = null;
+    }
+
+    if(scoreText) {
+      scoreText.destroy();
+      scoreText = null;
+    }
+
+    if(objectivesText) {
+      objectivesText.destroy();
+      objectivesText = null;
+    }
+
+    if(quitButton) {
+      quitButton.destroy();
+      quitButton = null;
+    }
+  };
  
   function initGraphics(){
     if(graphics) {

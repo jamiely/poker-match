@@ -136,4 +136,8 @@ PM.Level = function(gameBoard, levelConfig) {
       return obj.getDescription();
     }).join('\n');
   };
+
+  this.destroy = function() {
+    _.invoke(board.getCards(), 'kill');
+  };
 };

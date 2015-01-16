@@ -4,6 +4,28 @@ PM.Renderer = PM.Renderer || function(game) {
   var objectivesText;
   var quitButton;
   var buttonFactory = new PM.ButtonFactory(game);
+
+  var dispose = this.dispose = function() {
+    if(graphics) {
+      graphics.destroy();
+      graphics = null;
+    }
+
+    if(scoreText) {
+      scoreText.destroy();
+      scoreText = null;
+    }
+
+    if(objectivesText) {
+      objectivesText.destroy();
+      objectivesText = null;
+    }
+
+    if(quitButton) {
+      quitButton.destroy();
+      quitButton = null;
+    }
+  };
  
   function initGraphics(){
     if(graphics) {
