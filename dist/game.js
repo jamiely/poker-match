@@ -816,10 +816,11 @@ PM.GameStates.MainMenu = function(game) {
 
     var buttons = [
       button('Endless', gameStateChanger('playing')),
-      button('Score Attack', gameStateChanger('score-attack')),
+      button('Score Attack', gameStateChanger('score-attack'))
       //button('Challenges', notImplemented),
       //button('High Scores', notImplemented),
-      button('Options', notImplemented)];
+      //button('Options', notImplemented)
+    ];
 
     var yPadding = 10;
     // place near bottom of screen.
