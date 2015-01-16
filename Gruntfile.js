@@ -7,9 +7,13 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-usemin');
   grunt.loadNpmTasks('grunt-filerev');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-clean');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    clean: {
+      dist: ['dist']
+    },
     connect: {
       server: {
         options: {
@@ -39,13 +43,22 @@ module.exports = function (grunt) {
     },
     copy: {
       dist: {
-        src: 'index.html',
-        dest: 'dist/index.html'
+        files: [
+          {
+            src: 'index.html',
+            dest: 'dist/index.html'
+          },
+          {
+            src: 'assets/**',
+            dest: 'dist',
+            expand: true
+          }
+        ]
       }
     },
     watch: {
       files: ['js/**/*.js', 'Gruntfile.js'],
-      tasks: ['concat:generated']
+      tasks: ['concat:game']
     },
     open: {
       dev: {
@@ -79,15 +92,10 @@ module.exports = function (grunt) {
       html: 'dist/index.html'
     },
     concat: {
-      generated: {
+      game: {
         files: [
           {
-            src: [
-              "bower_components/jquery/dist/jquery.js",
-              "bower_components/phaser/build/phaser.js",
-              "bower_components/underscore/underscore.js",
-              'js/**/*.js'
-            ],
+            src: 'js/**/*.js',
             dest: 'dist/game.js'
           }
         ]
@@ -98,13 +106,15 @@ module.exports = function (grunt) {
   // simple build task
   grunt.registerTask('build', 
                      [
+                       'clean:dist',
                        'copy:dist',
+                       'concat:game',
                        'useminPrepare',
                        'concat:generated',
                        'filerev',
                        'usemin'
                      ]);
 
-  grunt.registerTask('default', ['connect', 'open', 'concat:generated', 'watch']);
+  grunt.registerTask('default', ['connect', 'open', 'concat:game', 'watch']);
 }
 
