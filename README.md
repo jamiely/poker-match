@@ -12,13 +12,23 @@ Installing new bower dependencies:
 
 ```bash
 bower install --save package
-grunt wiredep
+grunt bowerInstall
+```
+
+Watch:
+```bash
+grunt
 ```
 
 # production
 
-I just manually change the dependencies to CDN versions when I create
-the `gh-pages` branch.
+```bash
+grunt build
+```
+
+This puts the necessary files in `dist`, at which point 
+I manually created an orphaned `gh-pages` branch and
+commit the appropriate files.
 
 # testing
 
