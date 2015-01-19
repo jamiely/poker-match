@@ -6,6 +6,10 @@ instructions on the game page.
 
 This game uses the [Phaser game engine](http://phaser.io).
 
+# Demo
+
+
+
 # dev
 
 Installing new bower dependencies:
@@ -39,3 +43,6 @@ npm install -g karma-cli
 karma start --single-run
 ```
 
+# Media
+
+* http://youtu.be/ukGjqbZ4NXg (v2.1.0)

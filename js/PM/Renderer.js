@@ -1,9 +1,12 @@
 PM.Renderer = PM.Renderer || function(game) {
   var graphics;
+  var scoreHeading;
   var scoreText;
+  var objectivesHeading;
   var objectivesText;
   var quitButton;
   var buttonFactory = new PM.ButtonFactory(game);
+  var textPadding = 10;
 
   var dispose = this.dispose = function() {
     if(graphics) {
@@ -60,21 +63,38 @@ PM.Renderer = PM.Renderer || function(game) {
   function initText() {
     if(scoreText) return;
 
+    var rightMargin = game.world.width - textPadding;
     var style = { 
       font: "20px Arial", 
-      fill: "#FF0000", 
+      fill: "#FFFFFF", 
       align: "left" 
     };
-    scoreText = game.add.text(0, 0, "0", style);
+    var headingStyle = _.extend({}, style, {
+      font: '32px Arial'
+    });
+
+    function calcY(sprite) {
+      return textPadding + sprite.y + sprite.height;
+    }
+
+    scoreHeading = game.add.text(0, textPadding, "Score", headingStyle);
+    scoreHeading.anchor.setTo(1, 0);
+    scoreHeading.x = rightMargin;
+
+    scoreText = game.add.text(0, calcY(scoreHeading), "0", style);
     scoreText.anchor.setTo(1, 0);
-    scoreText.x = game.world.width;
+    scoreText.x = rightMargin;
+
+    objectivesHeading = game.add.text(0, calcY(scoreText), "Objectives", style);
+    objectivesHeading.anchor.setTo(1, 0);
+    objectivesHeading.x = rightMargin;
 
     var objectivesStyle = _.extend({}, style, {
       font: '12px Arial'
     });
-    objectivesText = game.add.text(0, 100, "0", objectivesStyle);
+    objectivesText = game.add.text(0, calcY(objectivesHeading), "?", objectivesStyle);
     objectivesText.anchor.setTo(1, 0);
-    objectivesText.x = game.world.width;
+    objectivesText.x = rightMargin;
   }
 
   function init() {
@@ -127,8 +147,8 @@ PM.Renderer = PM.Renderer || function(game) {
   var render = this.render = _.bind(function(level) {
     init();
     drawLine(level.getSelectedCards());
-    scoreText.text = "Score: " + level.getScore().toString();
-    objectivesText.text = "Objectives\n" + level.getObjectivesDescription();
+    scoreText.text = level.getScore().toString();
+    objectivesText.text = level.getObjectivesDescription();
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');
