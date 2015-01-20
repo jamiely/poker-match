@@ -2,7 +2,7 @@
 PM.Configuration = PM.Configuration || function() {
   this.cardSize = new Phaser.Point(140, 190);
   this.cardSpacing = new Phaser.Point(2, 2);
-  this.boardSize = new Phaser.Point(10, 7);
+  this.boardSize = new Phaser.Point(7, 5);
   this.gameSize = new Phaser.Point(800, 600);
 
   this.gameBoardSize = new Phaser.Point(600, 600);

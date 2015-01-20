@@ -3,6 +3,7 @@ v2.2.0
 * Added a logo
 * Changed the game background color
 * Changed the drag line color (and added a border)
+* Changed the number of cards on the board.
 
 v2.1.0
 ======
