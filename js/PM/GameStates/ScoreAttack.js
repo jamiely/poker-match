@@ -28,7 +28,7 @@ PM.GameStates.ScoreAttack = function(gb) {
   };
 
   var render = this.render = function() {
-    renderer.render(levelMgr.getCurrentLevel());
+    renderer.render(levelMgr.getCurrentLevel(), levelMgr.showScore);
   };
 
   this.shutdown = function() {

@@ -143,15 +143,25 @@ PM.Renderer = PM.Renderer || function(game) {
     //graphics.endFill();
   }
 
-  var render = this.render = _.bind(function(level) {
+  var render = this.render = _.bind(function(level, showSideBar) {
+    if(showSideBar !== false) showSideBar = true;
+
     init();
     graphics.clear();
     //game.stage.backgroundColor = '#498840';
     drawLine(level.getSelectedCards(), 0xeeeeee, 10);
     //drawLine(level.getSelectedCards(), 0xc93f3f, 5);
     drawLine(level.getSelectedCards(), 0x498840, 5);
+
+    scoreHeading.visible = showSideBar;
     scoreText.text = level.getScore().toString();
+    scoreText.visible = showSideBar;
+
     objectivesText.text = level.getObjectivesDescription();
+    objectivesText.visible = showSideBar;
+    objectivesHeading.visible = showSideBar;
+
+    quitButton.visible = showSideBar;
 
     //_.each(getSelectedCards(), function(c) {
       //game.debug.spriteBounds(c, 'rgba(0, 0, 255, .2)');
