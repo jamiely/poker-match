@@ -4,6 +4,51 @@ PM.LevelManager = function(gb) {
   var currentLevel = null;
   var levels = [];
 
+  var game = gb.game;
+
+  var curtain = new (function() {
+    var sprite;
+
+    this.preload = function() {
+      game.load.image('curtain', 'assets/curtain.png');
+    };
+    this.destroy = function() {
+      if(! sprite) return;
+      sprite.kill();
+    };
+    this.create = function() {
+      var s = game.add.sprite(game.world.width / 2, 0, 'curtain');
+      s.y = 0;
+      s.anchor.setTo(0.5, 1);
+      sprite = s;
+      return s;
+    };
+    this.drop = function() {
+      sprite.y = 0;
+      var tween = game.add.tween(sprite).to({
+        y: game.world.height
+      }, 2000, Phaser.Easing.Power2);
+      tween.start();
+      return tween;
+    };
+    this.raise = function() {
+      sprite.y = game.world.height;
+      var tween = game.add.tween(sprite).to({
+        y: 0
+      }, 2000, Phaser.Easing.Power2);
+      tween.start();
+      return tween;
+    };
+  });
+
+  this.preload = function() {
+    curtain.preload();
+  };
+
+  this.create = function() {
+    curtain.create();
+  };
+
   function nextLevel() {
     if(currentLevel) {
       currentLevel.destroy();
@@ -15,7 +60,8 @@ PM.LevelManager = function(gb) {
     }
     currentLevel.getSignals().levelCompleted.addOnce(function() {
       console.log('moving to next level');
-      nextLevel();
+      curtain.drop();
+      //nextLevel();
     });
     currentLevel.start();
     return currentLevel;
@@ -44,6 +90,7 @@ PM.LevelManager = function(gb) {
     if(currentLevel) {
       currentLevel.destroy();
     }
+    curtain.destroy();
   };
 };
 

@@ -6,6 +6,8 @@ PM.GameStates.ScoreAttack = function(gb) {
   // gamestate functions
   var preload = this.preload = function() {
     new PM.Preloader(game).preload();
+    levelMgr = new PM.LevelManager(gb);
+    levelMgr.preload();
   };
   var create = this.create = function() {
     renderer = new PM.Renderer(game);
@@ -19,8 +21,8 @@ PM.GameStates.ScoreAttack = function(gb) {
     level3 = new PM.Level(gb, new PM.LevelConfig(gb.config)); // TODO
     level3.addObjective(new PM.Objectives.Score(50000));
 
-    levelMgr = new PM.LevelManager(gb);
     levelMgr.setLevels([level1, level2, level3]);
+    levelMgr.create();
     // do any initial animations
     levelMgr.start();
   };
