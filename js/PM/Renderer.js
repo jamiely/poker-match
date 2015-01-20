@@ -107,18 +107,17 @@ PM.Renderer = PM.Renderer || function(game) {
   }
 
   var lastCardsDrawn = null;
-  function drawLine(cards) {
+  function drawLine(cards, color, width) {
 
-    graphics.clear();
 
     if(!cards) return;
     if(cards.length < 2) return;
 
-    graphics.lineStyle(5, 0x00ff00, 1);
+    graphics.lineStyle(width, color, 1);
     var first = cardCenter(cards[0]);
 
     // draw a circle at the beginning
-    graphics.beginFill(0x00ff00);
+    graphics.beginFill(color);
     graphics.drawCircle(first.x, first.y, 10);
     graphics.endFill();
 
@@ -146,7 +145,11 @@ PM.Renderer = PM.Renderer || function(game) {
 
   var render = this.render = _.bind(function(level) {
     init();
-    drawLine(level.getSelectedCards());
+    graphics.clear();
+    //game.stage.backgroundColor = '#498840';
+    drawLine(level.getSelectedCards(), 0xeeeeee, 10);
+    //drawLine(level.getSelectedCards(), 0xc93f3f, 5);
+    drawLine(level.getSelectedCards(), 0x498840, 5);
     scoreText.text = level.getScore().toString();
     objectivesText.text = level.getObjectivesDescription();
 

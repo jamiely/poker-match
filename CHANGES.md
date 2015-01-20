@@ -1,3 +1,9 @@
+v2.2.0
+======
+* Added a logo
+* Changed the game background color
+* Changed the drag line color (and added a border)
+
 v2.1.0
 ======
 

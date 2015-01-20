@@ -72,8 +72,8 @@ PM.Level = function(gameBoard, levelConfig) {
     cardSwapper.stop();
 
     var style = { 
-      font: "40px Arial", 
-      fill: "#0000FF", 
+      font: "70px Arial", 
+      fill: "#FFFFFF", 
       align: "center" 
     };
     var completedText = game.add.text(game.world.width/2, -100, "Objective Completed!", style);
