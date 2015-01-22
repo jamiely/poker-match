@@ -23,22 +23,23 @@ PM.StatisticsRenderer = function(game, stats) {
 
   var title;
 
+  var defaultInc = stats.moves * 0.05;
   var fields = [{
     id: 'matches',
     target: stats.moves,
-    inc: 0.05
+    inc: defaultInc
   }, {
     id: 'kinds',
     target: stats.countsByType.kind,
-    inc: 0.05
+    inc: defaultInc
   }, {
     id: 'straights',
     target: stats.countsByType.straight,
-    inc: 0.05
+    inc: defaultInc
   }, {
     id: 'flushes',
     target: stats.countsByType.flush,
-    inc: 0.05
+    inc: defaultInc
   }, {
     id: 'score',
     target: stats.score,
