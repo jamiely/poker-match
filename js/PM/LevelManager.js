@@ -33,7 +33,7 @@ PM.LevelManager = function(gb) {
       sprite.y = 0;
       self.showScore = false;
       var tween = game.add.tween(sprite).to({
-        y: game.world.height
+        y: game.world.height - 10
       }, 2000, Phaser.Easing.Power2);
       tween.onComplete.add(function() {
         //self.showScore = true;

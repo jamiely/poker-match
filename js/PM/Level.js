@@ -71,32 +71,34 @@ PM.Level = function(gameBoard, levelConfig) {
   function showObjectivesMetAnimation(callback) {
     cardSwapper.stop();
 
-    var style = { 
-      font: "70px Arial", 
-      fill: "#FFFFFF", 
-      align: "center" 
-    };
-    var completedText = game.add.text(game.world.width/2, -100, "Objective Completed!", style);
-    completedText.anchor.setTo(0.5, 0.5);
-    var tween = game.add.tween(completedText).to({
-        y: game.world.height/2
-      }, 1000, Phaser.Easing.Bounce.In).to({
-        y: game.world.height + 100
-      }, 2000, Phaser.Easing.Power2, true, 2000);
+    //var style = { 
+      //font: "70px Arial", 
+      //fill: "#FFFFFF", 
+      //align: "center" 
+    //};
+    //var completedText = game.add.text(game.world.width/2, -100, "Objective Completed!", style);
+    //completedText.anchor.setTo(0.5, 0.5);
+    //var tween = game.add.tween(completedText).to({
+        //y: game.world.height/2
+      //}, 1000, Phaser.Easing.Bounce.In).to({
+        //y: game.world.height + 100
+      //}, 2000, Phaser.Easing.Power2, true, 2000);
     // wait a bit for this
-    setTimeout(function() {
-      _.each(board.getCards(), function(c) {
-        var t = game.add.tween(c).to({ y: -100 }, 500 + 500 * Math.random(), Phaser.Easing.Power2);
-        t.onComplete.add(function() {
-          c.kill();
-        });
-        t.start();
+    _.each(board.getCards(), function(c) {
+      var t = game.add.tween(c).to({ y: -100 }, 500 + 500 * Math.random(), Phaser.Easing.Power2);
+      t.onComplete.add(function() {
+        c.kill();
       });
-    }, 500);
-    tween.onComplete.add(function() {
-      callback();
+      t.start();
     });
-    tween.delay(2000).start();
+    setTimeout(function() {
+      callback();
+    }, 1500);
+    //tween.onComplete.add(function() {
+      //callback();
+    //});
+    //tween.delay(2000).start();
+
   }
 
   // Performs any initial setup and starts animations that signal
