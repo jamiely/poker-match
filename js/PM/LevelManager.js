@@ -3,10 +3,12 @@ PM.LevelManager = function(gb) {
   var currentLevelIndex = -1;
   var currentLevel = null;
   var levels = [];
+  var statRenderer;
 
   var game = gb.game;
 
   var showScore = true;
+  var renderer;
   var self = this;
 
   var curtain = new (function() {
@@ -20,6 +22,7 @@ PM.LevelManager = function(gb) {
       sprite.kill();
     };
     this.create = function() {
+      renderer = new PM.Renderer(game);
       var s = game.add.sprite(game.world.width / 2, 0, 'curtain');
       s.y = 0;
       s.anchor.setTo(0.5, 1);
@@ -68,6 +71,10 @@ PM.LevelManager = function(gb) {
     currentLevel.getSignals().levelCompleted.addOnce(function() {
       console.log('moving to next level');
       curtain.drop();
+      var stats = currentLevel.getHistory().getStatistics();
+      statRenderer = new PM.StatisticsRenderer(game, stats);
+      statRenderer.preload();
+      statRenderer.create();
       //nextLevel();
     });
     currentLevel.start();
@@ -98,6 +105,22 @@ PM.LevelManager = function(gb) {
       currentLevel.destroy();
     }
     curtain.destroy();
+
+    if(renderer) {
+      renderer.dispose();
+      renderer = null;
+    }
+
+    if(statRenderer) {
+      statRenderer.destroy();
+    }
+  };
+
+  this.render = function() {
+    renderer.render(self.getCurrentLevel(), self.showScore);
+    if(statRenderer) {
+      statRenderer.render();
+    }
   };
 };
 

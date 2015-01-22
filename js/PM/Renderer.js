@@ -143,11 +143,16 @@ PM.Renderer = PM.Renderer || function(game) {
     //graphics.endFill();
   }
 
+  var clear = this.clear = function() {
+    graphics.clear();
+  };
+
   var render = this.render = _.bind(function(level, showSideBar) {
     if(showSideBar !== false) showSideBar = true;
 
     init();
-    graphics.clear();
+    clear();
+
     //game.stage.backgroundColor = '#498840';
     drawLine(level.getSelectedCards(), 0xeeeeee, 10);
     //drawLine(level.getSelectedCards(), 0xc93f3f, 5);
