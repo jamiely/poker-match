@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <title>Poker Match</title>
+  <style>
+    .hearts, .diamonds {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+<h1>Poker Match</h1>
+<h2>Instructions</h2>
+<p>
+  Click and drag a path across cards to create a match.
+  Possible matches include:
+</p>
+<ul>
+  <li>at least 3 of a kind</li>
+  <li>at least a 5 card flush</li>
+  <li>at least a 3 card straight</li>
+</ul>
+<div id="game"></div>
+<div id="history"></div>
+<h2>Credits</h2>
+<ul>
+  <li>Card images courtesy www.kenney.nl (http://opengameart.org/content/boardgame-pack)</li>
+</ul>
+<script src="main.ce33dd50.js"></script>
+<script>
+  var app = new PM.App(new PM.Configuration());
+  app.run();
+</script>
+</body>
+</html>
+
