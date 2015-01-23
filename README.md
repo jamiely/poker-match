@@ -45,4 +45,5 @@ karma start --single-run
 
 # Media
 
+* http://youtu.be/QNuY5AEaauA (v2.2.0)
 * http://youtu.be/ukGjqbZ4NXg (v2.1.0)
