@@ -21,6 +21,19 @@ PM.GameStates.ScoreAttack = function(gb) {
 
     levelMgr.setLevels([level1, level2, level3]);
     levelMgr.create();
+    levelMgr.onComplete.add(function() {
+      var style = {
+        font: "30px Arial", 
+        fill: "#FFFFFF", 
+        align: "right"
+      };
+      var text = game.add.text(game.world.width / 2, game.world.height / 2, 'Score Attack Completed!', style);
+      text.anchor.setTo(0.5, 0.5);
+      setTimeout(function() {
+        text.destroy();
+        game.state.start('main-menu');
+      }, 2000);
+    });
     // do any initial animations
     levelMgr.start();
   };

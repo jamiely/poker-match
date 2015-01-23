@@ -120,7 +120,6 @@ PM.Renderer = PM.Renderer || function(game) {
     graphics.beginFill(color);
     graphics.drawCircle(first.x, first.y, 10);
     graphics.endFill();
-
     graphics.moveTo(first.x, first.y);
 
     var last = first;
@@ -152,6 +151,10 @@ PM.Renderer = PM.Renderer || function(game) {
 
     init();
     clear();
+
+    if(!level) {
+      return;
+    }
 
     //game.stage.backgroundColor = '#498840';
     drawLine(level.getSelectedCards(), 0xeeeeee, 10);

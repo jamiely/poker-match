@@ -11,6 +11,8 @@ PM.LevelManager = function(gb) {
   var renderer;
   var self = this;
 
+  var onComplete = this.onComplete = new Phaser.Signal();
+
   var curtain = new (function() {
     var sprite;
 
@@ -67,6 +69,9 @@ PM.LevelManager = function(gb) {
       currentLevel.destroy();
     }
     currentLevelIndex ++;
+    if(currentLevelIndex >= levels.length) {
+      return null;
+    }
     currentLevel = levels[currentLevelIndex];
     if(! currentLevel) {
       return null;
@@ -81,8 +86,13 @@ PM.LevelManager = function(gb) {
       statRenderer.onComplete.add(function() {
         statRenderer.destroy();
 
-        nextLevel();
-        curtain.raise();
+        var next = nextLevel();
+        if(next) {
+          curtain.raise();
+        } else {
+          console.log('game over');
+          onComplete.dispatch();
+        }
       });
     });
     currentLevel.start();
