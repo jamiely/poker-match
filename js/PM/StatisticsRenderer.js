@@ -160,9 +160,12 @@ PM.StatisticsRenderer = function(game, stats) {
   };
 
   this.destroy = function() {
+    if(title) {
+      title.destroy();
+    }
     _.each(texts.all, function(f) {
       var ts = f.text;
-      ts.heading.destroy();
+      ts.label.destroy();
       ts.value.destroy();
     });
   };

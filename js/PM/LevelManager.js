@@ -30,6 +30,7 @@ PM.LevelManager = function(gb) {
       return s;
     };
     this.drop = function() {
+      sprite.parent.bringToTop(sprite);
       sprite.y = 0;
       self.showScore = false;
       var tween = game.add.tween(sprite).to({
@@ -42,10 +43,12 @@ PM.LevelManager = function(gb) {
       return tween;
     };
     this.raise = function() {
+      sprite.parent.bringToTop(sprite);
       sprite.y = game.world.height;
       var tween = game.add.tween(sprite).to({
         y: 0
       }, 2000, Phaser.Easing.Power2);
+      self.showScore = true;
       tween.start();
       return tween;
     };
@@ -75,7 +78,12 @@ PM.LevelManager = function(gb) {
       statRenderer = new PM.StatisticsRenderer(game, stats);
       statRenderer.preload();
       statRenderer.create();
-      //nextLevel();
+      statRenderer.onComplete.add(function() {
+        statRenderer.destroy();
+
+        nextLevel();
+        curtain.raise();
+      });
     });
     currentLevel.start();
     return currentLevel;
