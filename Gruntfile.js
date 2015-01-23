@@ -8,6 +8,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-filerev');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -77,15 +78,7 @@ module.exports = function (grunt) {
     useminPrepare: {
       html: 'index.html',
       options: {
-        dest: 'dist',
-        flow: {
-          html: {
-            steps: {
-              js: ['concat']
-            },
-            post: {}
-          }
-        }
+        dest: 'dist'
       }
     },
     usemin: {
@@ -111,6 +104,7 @@ module.exports = function (grunt) {
                        'concat:game',
                        'useminPrepare',
                        'concat:generated',
+                       'uglify:generated',
                        'filerev',
                        'usemin'
                      ]);
