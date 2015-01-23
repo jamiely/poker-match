@@ -1,6 +1,6 @@
 {
   "name": "poker-match",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A match game with poker cards.",
   "main": "deploy/index.html",
   "scripts": {

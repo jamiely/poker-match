@@ -4,6 +4,8 @@ v2.2.0
 * Changed the game background color
 * Changed the drag line color (and added a border)
 * Changed the number of cards on the board.
+* Added some animations between levels.
+* Made sure you can complete Score Attack.
 
 v2.1.0
 ======
