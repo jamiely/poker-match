@@ -79,21 +79,25 @@ PM.LevelManager = function(gb) {
     currentLevel.getSignals().levelCompleted.addOnce(function() {
       console.log('moving to next level');
       curtain.drop();
-      var stats = currentLevel.getHistory().getStatistics();
-      statRenderer = new PM.StatisticsRenderer(game, stats);
-      statRenderer.preload();
-      statRenderer.create();
-      statRenderer.onComplete.add(function() {
-        statRenderer.destroy();
+      setTimeout(function() {
+        var stats = currentLevel.getHistory().getStatistics();
+        statRenderer = new PM.StatisticsRenderer(game, stats);
+        statRenderer.preload();
+        statRenderer.create();
+        statRenderer.onComplete.add(function() {
+          setTimeout(function() {
+            statRenderer.destroy();
 
-        var next = nextLevel();
-        if(next) {
-          curtain.raise();
-        } else {
-          console.log('game over');
-          onComplete.dispatch();
-        }
-      });
+            var next = nextLevel();
+            if(next) {
+              curtain.raise();
+            } else {
+              console.log('game over');
+              onComplete.dispatch();
+            }
+          }, 2500);
+        });
+      }, 1000);
     });
     currentLevel.start();
     return currentLevel;

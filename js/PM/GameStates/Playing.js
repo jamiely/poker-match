@@ -12,6 +12,7 @@ PM.GameStates.Playing = function(gb) {
     endlessLevel.addObjective(new PM.Objectives.Impossible());
     levelMgr.setLevels([endlessLevel]);
     // do any initial animations
+    levelMgr.create();
     levelMgr.start();
   };
   var render = this.render = function() {
