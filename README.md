@@ -2,13 +2,13 @@
 
 Tentatively titled "Poker Match", this is a drag to match style game where the
 matches are poker-style hands. The valid hands are shown in the
-instructions on the game page.
+instructions on the game page. Read more in this [blog article](https://polyglot.jamie.ly/programming/2015/04/11/poker-match.html).
 
 This game uses the [Phaser game engine](http://phaser.io).
 
 # Demo
 
-
+https://jamiely.github.io/poker-match/
 
 # dev
 
